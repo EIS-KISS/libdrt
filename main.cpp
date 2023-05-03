@@ -1,5 +1,7 @@
 #include <ATen/core/ATen_fwd.h>
 #include <ATen/core/TensorBody.h>
+#include <ATen/ops/imag.h>
+#include <c10/core/ScalarType.h>
 #include <cstdint>
 #include <iostream>
 #include <eisgenerator/model.h>
@@ -34,24 +36,38 @@ void printImpedance(const std::vector<eis::DataPoint>& data)
 
 torch::Tensor eisToTensor(const std::vector<eis::DataPoint>& data, torch::Tensor* freqs)
 {
-	torch::Tensor output = torch::empty({static_cast<long int>(data.size()*2)}, tensorOptCpuNg<fvalue>());
-	if(freqs)
-		*freqs = torch::empty({static_cast<long int>(data.size()*2)}, tensorOptCpuNg<fvalue>());
+	torch::TensorOptions options = tensorOptCpuNg<fvalue>();
 
-	float* tensorDataPtr = output.contiguous().data_ptr<float>();
+	if constexpr(std::is_same<fvalue, float>::value)
+		options = options.dtype(torch::kComplexFloat);
+	else
+		options = options.dtype(torch::kComplexDouble);
+	torch::Tensor output = torch::empty({static_cast<long int>(data.size())}, options);
+	if(freqs)
+		*freqs = torch::empty({static_cast<long int>(data.size())}, tensorOptCpuNg<fvalue>());
+
+	torch::Tensor real = torch::real(output);
+	torch::Tensor imag = torch::imag(output);
+
+	auto realAccessor = real.accessor<fvalue, 1>();
+	auto imagAccessor = imag.accessor<fvalue, 1>();
 	float* tensorFreqDataPtr = freqs ? freqs->contiguous().data_ptr<float>() : nullptr;
 
-	for(size_t i = 0; i < data.size()*2; ++i)
+	for(size_t i = 0; i < data.size(); ++i)
 	{
-		float datapoint = i < data.size() ? data[i].im.real() : data[i - data.size()].im.imag();
-		if(std::isnan(datapoint) || std::isinf(datapoint))
-			datapoint = 0;
-		tensorDataPtr[i] = datapoint;
+		fvalue real = data[i].im.real();
+		fvalue imag = data[i].im.imag();
+		if(std::isnan(real) || std::isinf(real))
+			real = 0;
+		if(std::isnan(imag) || std::isinf(imag))
+			real = 0;
+
+		realAccessor[i] = real;
+		imagAccessor[i] = imag;
 		if(tensorFreqDataPtr)
 			tensorFreqDataPtr[i] = data[i % data.size()].omega;
 	}
 
-	output = torch::view_as_complex(output.reshape({static_cast<int64_t>(data.size()), 2}));
 	return output;
 }
 
@@ -62,7 +78,9 @@ torch::Tensor fvalueVectorToTensor(std::vector<fvalue>& vect)
 
 torch::Tensor guesStartingPoint(torch::Tensor& omega, torch::Tensor& impedanceSpectra)
 {
-	torch::Tensor startingPoint = torch::zeros(omega.sizes(), tensorOptCpuNg<fvalue>());
+	std::vector<int64_t> size = omega.sizes().vec();
+	++size[0];
+	torch::Tensor startingPoint = torch::zeros(size, tensorOptCpuNg<fvalue>());
 	startingPoint[-1] = torch::abs(impedanceSpectra[-1]);
 	return startingPoint;
 }
@@ -161,14 +179,27 @@ public:
 
 	}
 
-	static fvalue function(const torch::Tensor& x)
+	fvalue function(const torch::Tensor& x)
 	{
 		assert(checkTorchType<fvalue>(x));
+		assert(x.sizes().size() == 1);
 		auto xAccessor = x.accessor<fvalue, 1>();
-		fvalue accum = 0;
-		for(int64_t i = 0; i < x.size(0); ++i)
-			accum += (xAccessor[i]+3)*(xAccessor[i]+3)+20;
-		return accum;
+		int64_t size = x.numel();
+		torch::Tensor xLeft = x.narrow(0, 0, x.numel()-1);
+
+		std::cout<<"x:\n"<<x<<'\n';
+		std::cout<<"xLeft:\n"<<xLeft<<'\n';
+		std::cout<<"real:\n"<<torch::real(impedanceSpectra)<<'\n';
+		std::cout<<"imag:\n"<<torch::imag(impedanceSpectra)<<'\n';
+		std::cout<<"aMatrixReal:\n"<<aMatrixReal<<'\n';
+		std::cout<<"aMatrixImag:\n"<<aMatrixImag<<'\n';
+
+
+		torch::Tensor MSE_re = torch::sum(torch::pow(xAccessor[size-1] + torch::matmul(aMatrixReal, xLeft) - torch::real(impedanceSpectra), 2));
+		torch::Tensor MSE_im = torch::sum(torch::pow(torch::matmul(aMatrixImag, xLeft) - torch::imag(impedanceSpectra), 2));
+		torch::Tensor reg_term = el/2*torch::sum(torch::pow(xLeft, 2));
+		torch::Tensor obj = MSE_re + MSE_im + reg_term;
+		return obj.item().to<fvalue>();
 	}
 
 	static torch::Tensor getGrad(std::function<fvalue(const torch::Tensor& x)> fn, const torch::Tensor& xTensor, fvalue epsilon)
@@ -194,12 +225,23 @@ public:
 		Eigen::MatrixX<fvalue> xMatrix = x;
 		torch::Tensor xTensor = eigen2libtorch(xMatrix);
 		xTensor = xTensor.reshape({xTensor.numel()});
-		std::cout<<"xTensor\n "<<xTensor<<'\n';
-		torch::Tensor gradTensor = getGrad(&function, xTensor, epsilon);
+		//std::cout<<"xTensor\n "<<xTensor<<'\n';
+		torch::Tensor gradTensor = getGrad(std::bind(&RtFunct::function, this, std::placeholders::_1), xTensor, epsilon);
 		grad = libtorch2eigenVector<fvalue>(gradTensor);
 		return function(xTensor);
 	}
 };
+
+static void testFunc(RtFunct& funct, torch::Tensor& omega)
+{
+	std::cout<<__func__<<'\n';
+	std::vector<int64_t> size = omega.sizes().vec();
+	++size[0];
+	torch::Tensor x = torch::zeros(size, tensorOptCpuNg<fvalue>());
+	x[-1] = 3;
+	x[0] = 0.5;
+	std::cout<<"RtFunct.function: "<<funct.function(x)<<std::endl;
+}
 
 int main(int argc, char** argv)
 {
@@ -208,7 +250,6 @@ int main(int argc, char** argv)
 	eis::Range omega(1, 1e6, 3, true);
 	std::vector<fvalue> omegaVector = omega.getRangeVector();
 	torch::Tensor omegaTensor = fvalueVectorToTensor(omegaVector);
-	std::cout<<"Omega Tensor\n "<<omegaTensor<<'\n';
 	eis::Model model("r{10}-r{50}p{0.02, 0.8}");
 
 	std::vector<eis::DataPoint> data = model.executeSweep(omega);
@@ -216,18 +257,19 @@ int main(int argc, char** argv)
 
 	torch::Tensor aMatrixImag = aImag(omegaTensor);
 	torch::Tensor aMatrixReal = aReal(omegaTensor);
-	std::cout<<"aMatrixImag\n "<<aMatrixImag<<'\n';
-	std::cout<<"aMatrixReal\n "<<aMatrixReal<<'\n';
 
 	printImpedance(data);
 
 	LBFGSpp::LBFGSParam<fvalue> fitParam;
-	fitParam.epsilon = 1e-6;
+	fitParam.epsilon = 1e-2;
 	fitParam.max_iterations = 100;
+	fitParam.max_linesearch = 1000;
 
 	LBFGSpp::LBFGSSolver<fvalue> solver(fitParam);
-	RtFunct funct(impedanceSpectra, aMatrixImag, aMatrixReal, 0.1, 0.001);
-	Eigen::VectorX<fvalue> x = Eigen::VectorX<fvalue>::Ones(4)*3;
+	RtFunct funct(impedanceSpectra, aMatrixImag, aMatrixReal, 0.01, 0.001);
+
+	torch::Tensor startTensor = guesStartingPoint(omegaTensor, impedanceSpectra);
+	Eigen::VectorX<fvalue> x = libtorch2eigenVector<fvalue>(startTensor);
 	fvalue fx;
 	int iterations = solver.minimize(funct, x, fx);
 

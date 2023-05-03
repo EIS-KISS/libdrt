@@ -8,6 +8,8 @@
 #include <Eigen/Core>
 #include <stdexcept>
 
+#include "Param.h"
+
 namespace LBFGSpp {
 
 ///
