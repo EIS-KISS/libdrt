@@ -5,21 +5,7 @@
 #include <torch/types.h>
 #include <vector>
 
-template <typename V>
-inline torch::TensorOptions tensorOptCpuNg()
-{
-	static_assert(std::is_same<V, float>::value || std::is_same<V, double>::value,
-				  "This function can only be passed double or float types");
-	torch::TensorOptions options;
-	if constexpr(std::is_same<V, float>::value)
-		options = options.dtype(torch::kFloat32);
-	else
-		options = options.dtype(torch::kFloat64);
-	options = options.layout(torch::kStrided);
-	options = options.device(torch::kCPU);
-	options = options.requires_grad(false);
-	return options;
-}
+#include "tensoroptions.h"
 
 template <typename V>
 bool checkTorchType(const torch::Tensor& tensor)
@@ -47,7 +33,7 @@ torch::Tensor eigen2libtorch(Eigen::MatrixX<V> &M)
 {
 	Eigen::Matrix<V, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> E(M);
 	std::vector<int64_t> dims = {E.rows(), E.cols()};
-	auto T = torch::from_blob(E.data(), dims, tensorOptCpuNg<V>()).clone();
+	auto T = torch::from_blob(E.data(), dims, tensorOptCpu<V>(false)).clone();
 	return T;
 }
 
@@ -55,7 +41,18 @@ template <typename V>
 torch::Tensor eigen2libtorch(MatrixXrm<V> &E, bool copydata = true)
 {
 	std::vector<int64_t> dims = {E.rows(), E.cols()};
-	auto T = torch::from_blob(E.data(), dims, tensorOptCpuNg<V>());
+	auto T = torch::from_blob(E.data(), dims, tensorOptCpu<V>(false));
+	if (copydata)
+		return T.clone();
+	else
+		return T;
+}
+
+template <typename V>
+torch::Tensor eigenVector2libtorch(Eigen::Vector<V, Eigen::Dynamic> &E, bool copydata = true)
+{
+	std::vector<int64_t> dims = {E.cols()};
+	auto T = torch::from_blob(E.data(), dims, tensorOptCpu<V>(false));
 	if (copydata)
 		return T.clone();
 	else
