@@ -51,7 +51,7 @@ torch::Tensor eigen2libtorch(MatrixXrm<V> &E, bool copydata = true)
 template <typename V>
 torch::Tensor eigenVector2libtorch(Eigen::Vector<V, Eigen::Dynamic> &E, bool copydata = true)
 {
-	std::vector<int64_t> dims = {E.cols()};
+	std::vector<int64_t> dims = {E.rows()};
 	auto T = torch::from_blob(E.data(), dims, tensorOptCpu<V>(false));
 	if (copydata)
 		return T.clone();

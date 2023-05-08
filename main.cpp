@@ -25,7 +25,10 @@ int main(int argc, char** argv)
 {
 	std::cout<<std::scientific;
 
-	eis::Range omega(1, 1e6, 4, true);
+	for(size_t i = 0; i < 10; ++i)
+	{
+
+	eis::Range omega(1, 1e6, 50, true);
 	std::vector<fvalue> omegaVector = omega.getRangeVector();
 	eis::Model model("r{10}-r{50}p{0.02, 0.8}");
 
@@ -33,11 +36,12 @@ int main(int argc, char** argv)
 	printImpedance(data);
 
 	FitMetics fm;
-	torch::Tensor x = calcDrt(data, omegaVector, fm);
+	torch::Tensor x = calcDrt(data, omegaVector, fm, FitParameters(1000));
 
 	std::cout<<"Iterations: "<<fm.iterations<<'\n';
 	std::cout<<"fx "<<fm.fx<<'\n';
 	std::cout<<"xVect\n"<<x<<'\n';
+	}
 
 	return 0;
 }

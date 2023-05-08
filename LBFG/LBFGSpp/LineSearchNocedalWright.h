@@ -84,7 +84,7 @@ public:
             test_curv = -param.wolfe * dg_init;         // Curvature
 
         // Ends of the line search range (step_lo > step_hi is allowed)
-        Scalar step_hi, fx_hi, dg_hi;
+        Scalar step_hi, fx_hi;//, dg_hi;
         Scalar step_lo = Scalar(0), fx_lo = fx_init, dg_lo = dg_init;
 
         // STEP 1: Bracketing Phase
@@ -110,7 +110,7 @@ public:
             {
                 step_hi = step;
                 fx_hi = fx;
-                dg_hi = dg;
+                //dg_hi = dg;
                 break;
             }
             // If reaching here, then the sufficient decrease condition is satisfied
@@ -121,7 +121,7 @@ public:
 
             step_hi = step_lo;
             fx_hi = fx_lo;
-            dg_hi = dg_lo;
+            //dg_hi = dg_lo;
             step_lo = step;
             fx_lo = fx;
             dg_lo = dg;
@@ -188,7 +188,7 @@ public:
 
                 step_hi = step;
                 fx_hi = fx;
-                dg_hi = dg;
+                //dg_hi = dg;
             }
             else
             {
@@ -200,7 +200,7 @@ public:
                 {
                     step_hi = step_lo;
                     fx_hi = fx_lo;
-                    dg_hi = dg_lo;
+                    //dg_hi = dg_lo;
                 }
 
                 if (step == step_lo)

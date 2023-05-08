@@ -3,13 +3,10 @@
 #include <Eigen/Core>
 #include <eisgenerator/eistype.h>
 
-
 #include "tensoroptions.h"
 #include "eigentorchconversions.h"
 #include "eistotorch.h"
 #include "LBFG/LBFGS.h"
-
-
 
 static torch::Tensor guesStartingPoint(torch::Tensor& omega, torch::Tensor& impedanceSpectra)
 {
@@ -94,14 +91,6 @@ public:
 		int64_t size = x.numel();
 		torch::Tensor xLeft = x.narrow(0, 0, x.numel()-1);
 
-		std::cout<<"x:\n"<<x<<'\n';
-		std::cout<<"xLeft:\n"<<xLeft<<'\n';
-		std::cout<<"real:\n"<<torch::real(impedanceSpectra)<<'\n';
-		std::cout<<"imag:\n"<<torch::imag(impedanceSpectra)<<'\n';
-		std::cout<<"aMatrixReal:\n"<<aMatrixReal<<'\n';
-		std::cout<<"aMatrixImag:\n"<<aMatrixImag<<'\n';
-
-
 		torch::Tensor MSE_re = torch::sum(torch::pow(xAccessor[size-1] + torch::matmul(aMatrixReal, xLeft) - torch::real(impedanceSpectra), 2));
 		torch::Tensor MSE_im = torch::sum(torch::pow(torch::matmul(aMatrixImag, xLeft) - torch::imag(impedanceSpectra), 2));
 		torch::Tensor reg_term = el/2*torch::sum(torch::pow(xLeft, 2));
@@ -138,30 +127,31 @@ public:
 	}
 };
 
-torch::Tensor calcDrt(torch::Tensor& impedanceSpectra, torch::Tensor& omegaTensor, FitMetics& fm)
+torch::Tensor calcDrt(torch::Tensor& impedanceSpectra, torch::Tensor& omegaTensor, FitMetics& fm, const FitParameters& fp)
 {
 	torch::Tensor aMatrixImag = aImag(omegaTensor);
 	torch::Tensor aMatrixReal = aReal(omegaTensor);
 
 	LBFGSpp::LBFGSParam<fvalue> fitParam;
-	fitParam.epsilon = 1e-2;
-	fitParam.max_iterations = 100;
-	fitParam.max_linesearch = 1000;
+	fitParam.epsilon = fp.epsilon;
+	fitParam.max_iterations = fp.maxIter;
+	fitParam.max_linesearch = fp.maxIter*10;
 
 	LBFGSpp::LBFGSSolver<fvalue> solver(fitParam);
-	RtFunct funct(impedanceSpectra, aMatrixImag, aMatrixReal, 0.01, 0.001);
+	RtFunct funct(impedanceSpectra, aMatrixImag, aMatrixReal, 0.01, fp.step);
 
 	torch::Tensor startTensor = guesStartingPoint(omegaTensor, impedanceSpectra);
 	Eigen::VectorX<fvalue> x = libtorch2eigenVector<fvalue>(startTensor);
 
 	fm.iterations = solver.minimize(funct, x, fm.fx);
 
-	return eigenVector2libtorch<fvalue>(x);
+	torch::Tensor xT = eigenVector2libtorch<fvalue>(x);
+	return xT;
 }
 
-torch::Tensor calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm)
+torch::Tensor calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm, const FitParameters& fp)
 {
 	torch::Tensor impedanceSpectra = eisToComplexTensor(data, nullptr);
 	torch::Tensor omegaTensor = fvalueVectorToTensor(const_cast<std::vector<fvalue>&>(omegaVector)).clone();
-	return calcDrt(impedanceSpectra, omegaTensor, fm);
+	return calcDrt(impedanceSpectra, omegaTensor, fm, fp);
 }
