@@ -67,6 +67,7 @@ Eigen::Matrix<V, Eigen::Dynamic, Eigen::Dynamic> libtorch2eigenMaxtrix(torch::Te
 	MatrixXrm uses Eigen::RowMajor for compatibility.
 	*/
 	assert(checkTorchType<V>(Tin));
+	Tin = Tin.contiguous();
 	auto T = Tin.to(torch::kCPU);
 	Eigen::Map<MatrixXrm<V>> E(T.data_ptr<V>(), T.size(0), T.size(1));
 	return E;
@@ -77,6 +78,7 @@ Eigen::Vector<V, Eigen::Dynamic> libtorch2eigenVector(torch::Tensor &Tin)
 {
 	assert(Tin.sizes().size() == 1);
 	assert(checkTorchType<V>(Tin));
+	Tin = Tin.contiguous();
 	auto T = Tin.to(torch::kCPU);
 	Eigen::Map<Eigen::Vector<V, Eigen::Dynamic>> E(T.data_ptr<V>(), T.numel());
 	return E;
