@@ -22,7 +22,7 @@ static torch::Tensor guesStartingPoint(torch::Tensor& omega, torch::Tensor& impe
 static torch::Tensor aImag(torch::Tensor& omega)
 {
 	torch::Tensor tau = 1.0/(omega/(2*M_PI));
-	torch::Tensor out = torch::zeros({omega.numel(), omega.numel()}, torch::TensorOptions().dtype(torch::kFloat32));
+	torch::Tensor out = torch::zeros({omega.numel(), omega.numel()}, tensorOptCpu<fvalue>());
 	auto outAccessor = out.accessor<float, 2>();
 	auto omegaAccessor = omega.accessor<float, 1>();
 	auto tauAccessor = tau.accessor<float, 1>();
@@ -168,3 +168,12 @@ torch::Tensor calcDrt(const std::vector<eis::DataPoint>& data, const std::vector
 	torch::Tensor omegaTensor = fvalueVectorToTensor(const_cast<std::vector<fvalue>&>(omegaVector)).clone();
 	return calcDrt(impedanceSpectra, omegaTensor, fm, fp);
 }
+
+torch::Tensor calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& fm,  const FitParameters& fp)
+{
+	torch::Tensor omegaTensor;
+	torch::Tensor impedanceSpectra = eisToComplexTensor(data, &omegaTensor);
+	return calcDrt(impedanceSpectra, omegaTensor, fm, fp);
+}
+
+

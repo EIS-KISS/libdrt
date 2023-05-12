@@ -35,7 +35,7 @@ target_include_directories(${PROJECT_NAME}_test PRIVATE . ${TORCH_INCLUDE_DIRS})
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-Wall -O2 -march=native -g" LINK_FLAGS "-flto")
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 
-set(API_HEADERS_DIR drt/)
+set(API_HEADERS_DIR eisdrt/)
 set(API_HEADERS
 	${API_HEADERS_DIR}/drt.h
 )

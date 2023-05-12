@@ -7,13 +7,7 @@
 
 torch::Tensor eisToComplexTensor(const std::vector<eis::DataPoint>& data, torch::Tensor* freqs)
 {
-	torch::TensorOptions options = tensorOptCpu<fvalue>();
-
-	if constexpr(std::is_same<fvalue, float>::value)
-		options = options.dtype(torch::kComplexFloat);
-	else
-		options = options.dtype(torch::kComplexDouble);
-	torch::Tensor output = torch::empty({static_cast<long int>(data.size())}, options);
+	torch::Tensor output = torch::empty({static_cast<long int>(data.size())}, tensorOptCplxCpu<fvalue>());
 	if(freqs)
 		*freqs = torch::empty({static_cast<long int>(data.size())}, tensorOptCpu<fvalue>());
 
