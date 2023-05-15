@@ -1,65 +1,60 @@
 #include "eisdrt/drt.h"
 
-#include <ATen/ops/ones.h>
-#include <ATen/ops/zeros.h>
 #include <Eigen/Core>
+#include <Eigen/StdVector>
 #include <eisgenerator/eistype.h>
+#include <iostream>
 
-#include "tensoroptions.h"
-#include "eigentorchconversions.h"
-#include "eistotorch.h"
+#include "Eigen/src/Core/Matrix.h"
+#include "eistoeigen.h"
 #include "LBFG/LBFGSB.h"
 
-static torch::Tensor guesStartingPoint(torch::Tensor& omega, torch::Tensor& impedanceSpectra)
+static Eigen::Vector<fvalue, Eigen::Dynamic> guesStartingPoint(Eigen::Vector<fvalue, Eigen::Dynamic>& omega, Eigen::Vector<std::complex<fvalue>, Eigen::Dynamic>& impedanceSpectra)
 {
-	std::vector<int64_t> size = omega.sizes().vec();
-	++size[0];
-	torch::Tensor startingPoint = torch::zeros(size, tensorOptCpu<fvalue>(false));
-	startingPoint[-1] = torch::abs(impedanceSpectra[-1]);
+	Eigen::Vector<fvalue, Eigen::Dynamic> startingPoint = Eigen::Vector<fvalue, Eigen::Dynamic>::Zero(omega.size()+1);
+	startingPoint[startingPoint.size()-1] = std::abs(impedanceSpectra[impedanceSpectra.size()-1]);
 	return startingPoint;
 }
 
-static torch::Tensor aImag(torch::Tensor& omega)
+static Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aImag(Eigen::Vector<fvalue, Eigen::Dynamic>& omega)
 {
-	torch::Tensor tau = 1.0/(omega/(2*M_PI));
-	torch::Tensor out = torch::zeros({omega.numel(), omega.numel()}, tensorOptCpu<fvalue>());
-	auto outAccessor = out.accessor<float, 2>();
-	auto omegaAccessor = omega.accessor<float, 1>();
-	auto tauAccessor = tau.accessor<float, 1>();
-	for(int32_t i = 0; i < out.size(0); ++i)
+	Eigen::Vector<fvalue, Eigen::Dynamic> tau = (omega * 1/static_cast<fvalue>(2*M_PI)).cwiseInverse();
+	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> out =
+		Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic>::Zero(omega.size(), omega.size());
+
+	for(int32_t i = 0; i < out.cols(); ++i)
 	{
-		for(int32_t j = 0; j < out.size(1); ++j)
+		for(int32_t j = 0; j < out.rows(); ++j)
 		{
-			outAccessor[i][j] = 0.5*(omegaAccessor[i]*tauAccessor[j])/(1+std::pow(omegaAccessor[i]*tauAccessor[j], 2));
+			out(i,j) = 0.5*(omega[i]*tau[j])/(1+std::pow(omega[i]*tau[j], 2));
 			if(j == 0)
-				outAccessor[i][j] = outAccessor[i][j]*std::log(tauAccessor[j+1]/tauAccessor[j]);
-			else if(j == out.size(1)-1)
-				outAccessor[i][j] = outAccessor[i][j]*std::log(tauAccessor[j]/tauAccessor[j-1]);
+				out(i,j) = out(i,j)*std::log(tau[j+1]/tau[j]);
+			else if(j == out.rows()-1)
+				out(i,j) = out(i,j)*std::log(tau[j]/tau[j-1]);
 			else
-				outAccessor[i][j] = outAccessor[i][j]*std::log(tauAccessor[j+1]/tauAccessor[j-1]);
+				out(i,j) = out(i,j)*std::log(tau[j+1]/tau[j-1]);
 		}
 	}
 	return out;
 }
 
-static torch::Tensor aReal(torch::Tensor& omega)
+static Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aReal(Eigen::Vector<fvalue, Eigen::Dynamic>& omega)
 {
-	torch::Tensor tau = 1.0/(omega/(2*M_PI));
-	torch::Tensor out = torch::zeros({omega.numel(), omega.numel()}, torch::TensorOptions().dtype(torch::kFloat32));
-	auto outAccessor = out.accessor<float, 2>();
-	auto omegaAccessor = omega.accessor<float, 1>();
-	auto tauAccessor = tau.accessor<float, 1>();
-	for(int32_t i = 0; i < out.size(0); ++i)
+	Eigen::Vector<fvalue, Eigen::Dynamic> tau = (omega * 1/static_cast<fvalue>(2*M_PI)).cwiseInverse();
+	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> out =
+		Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic>::Zero(omega.size(), omega.size());
+
+	for(int32_t i = 0; i < out.cols(); ++i)
 	{
-		for(int32_t j = 0; j < out.size(1); ++j)
+		for(int32_t j = 0; j < out.rows(); ++j)
 		{
-			outAccessor[i][j] = -0.5/(1+std::pow(omegaAccessor[i]*tauAccessor[j], 2));
+			out(i, j) = -0.5/(1+std::pow(omega[i]*tau[j], 2));
 			if(j == 0)
-				outAccessor[i][j] = outAccessor[i][j]*std::log(tauAccessor[j+1]/tauAccessor[j]);
-			else if(j == out.size(1)-1)
-				outAccessor[i][j] = outAccessor[i][j]*std::log(tauAccessor[j]/tauAccessor[j-1]);
+				out(i, j) = out(i, j)*std::log(tau[j+1]/tau[j]);
+			else if(j == out.rows()-1)
+				out(i, j) = out(i, j)*std::log(tau[j]/tau[j-1]);
 			else
-				outAccessor[i][j] = outAccessor[i][j]*std::log(tauAccessor[j+1]/tauAccessor[j-1]);
+				out(i, j) = out(i, j)*std::log(tau[j+1]/tau[j-1]);
 		}
 	}
 	return out;
@@ -68,14 +63,17 @@ static torch::Tensor aReal(torch::Tensor& omega)
 class RtFunct
 {
 private:
-	torch::Tensor impedanceSpectra;
-	torch::Tensor aMatrixImag;
-	torch::Tensor aMatrixReal;
+	Eigen::Vector<std::complex<fvalue>, Eigen::Dynamic> impedanceSpectra;
+	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixImag;
+	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixReal;
 	fvalue el;
 	fvalue epsilon;
 
 public:
-	RtFunct(torch::Tensor impedanceSpectraI, torch::Tensor aMatrixImagI, torch::Tensor aMatrixRealI, fvalue elI, fvalue epsilonI):
+	RtFunct(Eigen::Vector<std::complex<fvalue>, Eigen::Dynamic> impedanceSpectraI,
+		Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixImagI,
+		Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixRealI,
+		fvalue elI, fvalue epsilonI):
 	impedanceSpectra(impedanceSpectraI),
 	aMatrixImag(aMatrixImagI),
 	aMatrixReal(aMatrixRealI),
@@ -85,59 +83,68 @@ public:
 
 	}
 
-	fvalue function(const torch::Tensor& x)
+	fvalue function(const Eigen::Vector<fvalue, Eigen::Dynamic>& x)
 	{
-		auto xAccessor = x.accessor<fvalue, 1>();
-		int64_t size = x.numel();
-		torch::Tensor xLeft = x.narrow(0, 0, x.numel()-1);
+		int64_t size = x.size();
+		Eigen::Vector<fvalue, Eigen::Dynamic> xLeft = x.head(x.size()-1);
 
-		torch::Tensor MSE_re = torch::sum(torch::pow(xAccessor[size-1] + torch::matmul(aMatrixReal, xLeft) - torch::real(impedanceSpectra), 2), torch::typeMetaToScalarType(x.dtype()));
-		torch::Tensor MSE_im = torch::sum(torch::pow(torch::matmul(aMatrixImag, xLeft) - torch::imag(impedanceSpectra), 2), torch::typeMetaToScalarType(x.dtype()));
-		torch::Tensor reg_term = el/2*torch::sum(torch::pow(xLeft, 2), torch::typeMetaToScalarType(x.dtype()));
-		torch::Tensor obj = MSE_re + MSE_im + reg_term;
-		return obj.item().to<fvalue>();
+		std::cout<<"aMatrixReal:\n"<<aMatrixReal<<"\nxLeft:\n"<<xLeft<<"\nx:\n"<<x<<std::endl;
+		Eigen::Vector<fvalue, Eigen::Dynamic> t = aMatrixReal*xLeft;
+		std::cout<<"T1:\n"<<t<<std::endl;
+		t = t - impedanceSpectra.real();
+		std::cout<<"T2:\n"<<t<<std::endl;
+		t = t.array() + x[size-1];
+		std::cout<<"T3:\n"<<t<<std::endl;
+		t = t.array().pow(2);
+		std::cout<<"T4:\n"<<t<<std::endl;
+		fvalue MSE_re = t.sum();
+		std::cout<<"T5:\n"<<MSE_re<<std::endl;
+
+		t = (aMatrixImag*xLeft - impedanceSpectra.imag()).array().pow(2);
+		fvalue MSE_im = t.sum();
+		fvalue reg_term = el/2*xLeft.array().pow(2).sum();
+		fvalue obj = MSE_re + MSE_im + reg_term;
+		return obj;
 	}
 
-	static torch::Tensor getGrad(std::function<fvalue(const torch::Tensor& x)> fn, const torch::Tensor& xTensor, fvalue epsilon)
+	static Eigen::Vector<fvalue, Eigen::Dynamic> getGrad(std::function<fvalue(const Eigen::Vector<fvalue, Eigen::Dynamic>& x)> fn,
+													Eigen::Vector<fvalue, Eigen::Dynamic>& x, fvalue epsilon)
 	{
-		torch::Tensor out = torch::zeros(xTensor.sizes(), tensorOptCpu<fvalue>(false));
-		auto outAccessor = out.accessor<fvalue, 1>();
-		assert(checkTorchType<fvalue>(xTensor));
-		auto xAccessor = xTensor.accessor<fvalue, 1>();
-		for(int64_t i = 0; i < out.size(0); ++i)
+		Eigen::Vector<fvalue, Eigen::Dynamic> out = Eigen::Vector<fvalue, Eigen::Dynamic>::Zero(x.size());
+		for(int64_t i = 0; i < out.size(); ++i)
 		{
-			xAccessor[i] -= epsilon;
-			fvalue left = fn(xTensor);
-			xAccessor[i] += 2*epsilon;
-			fvalue right = fn(xTensor);
-			xAccessor[i] -= epsilon;
-			outAccessor[i] = (right-left)/(2*epsilon);
+			x[i] -= epsilon;
+			fvalue left = fn(x);
+			x[i] += 2*epsilon;
+			fvalue right = fn(x);
+			x[i] -= epsilon;
+			x[i] = (right-left)/(2*epsilon);
 		}
 		return out;
 	}
 
-	fvalue operator()(const Eigen::VectorX<fvalue>& x, Eigen::VectorX<fvalue>& grad)
+	fvalue operator()(Eigen::VectorX<fvalue>& x, Eigen::VectorX<fvalue>& grad)
 	{
-		Eigen::MatrixX<fvalue> xMatrix = x;
-		torch::Tensor xTensor = eigen2libtorch(xMatrix);
-		xTensor = xTensor.reshape({xTensor.numel()});
-		torch::Tensor gradTensor = getGrad(std::bind(&RtFunct::function, this, std::placeholders::_1), xTensor, epsilon);
-		grad = libtorch2eigenVector<fvalue>(gradTensor);
-		return function(xTensor);
+		grad = getGrad(std::bind(&RtFunct::function, this, std::placeholders::_1), x, epsilon);
+		return function(x);
 	}
 };
 
-static torch::Tensor calcBounds(torch::Tensor& impedanceSpectra, torch::Tensor startTensor)
+static Eigen::Matrix<fvalue, Eigen::Dynamic, 2> calcBounds(Eigen::VectorX<std::complex<fvalue>>& impedanceSpectra, Eigen::VectorX<fvalue> startTensor)
 {
-	torch::Tensor lowerBounds = torch::zeros({1, startTensor.numel()}, tensorOptCpu<fvalue>());
-	torch::Tensor upperBounds = torch::ones({1, startTensor.numel()}, tensorOptCpu<fvalue>())*torch::max(torch::abs(impedanceSpectra));
-	return torch::cat({lowerBounds, upperBounds}, 0);
+	Eigen::VectorX<fvalue> lowerBounds = Eigen::VectorX<fvalue>::Zero(startTensor.size());
+	Eigen::VectorX<fvalue> upperBounds = Eigen::VectorX<fvalue>::Ones(startTensor.size())*impedanceSpectra.cwiseAbs().maxCoeff();
+
+	Eigen::Matrix<fvalue, Eigen::Dynamic, 2> out(lowerBounds.size(), 2);
+	out.col(0) = lowerBounds;
+	out.col(1) = upperBounds;
+	return out;
 }
 
-torch::Tensor calcDrt(torch::Tensor& impedanceSpectra, torch::Tensor& omegaTensor, FitMetics& fm, const FitParameters& fp)
+Eigen::VectorX<fvalue> calcDrt(Eigen::VectorX<std::complex<fvalue>>& impedanceSpectra, Eigen::VectorX<fvalue>& omegaTensor, FitMetics& fm, const FitParameters& fp)
 {
-	torch::Tensor aMatrixImag = aImag(omegaTensor);
-	torch::Tensor aMatrixReal = aReal(omegaTensor);
+	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixImag = aImag(omegaTensor);
+	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixReal = aReal(omegaTensor);
 
 	LBFGSpp::LBFGSBParam<fvalue> fitParam;
 	fitParam.epsilon = fp.epsilon;
@@ -147,33 +154,29 @@ torch::Tensor calcDrt(torch::Tensor& impedanceSpectra, torch::Tensor& omegaTenso
 	LBFGSpp::LBFGSBSolver<fvalue> solver(fitParam);
 	RtFunct funct(impedanceSpectra, aMatrixImag, aMatrixReal, 0.01, fp.step);
 
-	torch::Tensor startTensor = guesStartingPoint(omegaTensor, impedanceSpectra);
-	torch::Tensor bounds = calcBounds(impedanceSpectra, startTensor);
-	torch::Tensor lowerBoundTensor = bounds.select(0, 0);
-	torch::Tensor upperBoundTensor = bounds.select(0, 1);
-	Eigen::VectorX<fvalue> lowerbound = libtorch2eigenVector<fvalue>(lowerBoundTensor);
-	Eigen::VectorX<fvalue> upperbound = libtorch2eigenVector<fvalue>(upperBoundTensor);
+	Eigen::VectorX<fvalue> x = guesStartingPoint(omegaTensor, impedanceSpectra);
+	std::cout<<"StartingPoint\n"<<x<<std::endl;
+	Eigen::Matrix<fvalue, Eigen::Dynamic, 2> bounds = calcBounds(impedanceSpectra, x);
+	Eigen::VectorX<fvalue> lowerBounds = bounds.col(0);
+	Eigen::VectorX<fvalue> upperBounds = bounds.col(1);
 
-	Eigen::VectorX<fvalue> x = libtorch2eigenVector<fvalue>(startTensor);
+	fm.iterations = solver.minimize(funct, x, fm.fx, lowerBounds, upperBounds);
 
-	fm.iterations = solver.minimize(funct, x, fm.fx, lowerbound, upperbound);
-
-	torch::Tensor xT = eigenVector2libtorch<fvalue>(x);
-	return xT;
+	return x;
 }
 
-torch::Tensor calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm, const FitParameters& fp)
+Eigen::VectorX<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm, const FitParameters& fp)
 {
-	torch::Tensor impedanceSpectra = eisToComplexTensor(data, nullptr);
-	torch::Tensor omegaTensor = fvalueVectorToTensor(const_cast<std::vector<fvalue>&>(omegaVector)).clone();
-	return calcDrt(impedanceSpectra, omegaTensor, fm, fp);
+	Eigen::VectorX<std::complex<fvalue>> impedanceSpectra = eistoeigen(data);
+	Eigen::VectorX<fvalue> omega = Eigen::VectorX<fvalue>::Map(omegaVector.data(), omegaVector.size());
+	return calcDrt(impedanceSpectra, omega, fm, fp);
 }
 
-torch::Tensor calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& fm,  const FitParameters& fp)
+Eigen::VectorX<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& fm,  const FitParameters& fp)
 {
-	torch::Tensor omegaTensor;
-	torch::Tensor impedanceSpectra = eisToComplexTensor(data, &omegaTensor);
-	return calcDrt(impedanceSpectra, omegaTensor, fm, fp);
+	Eigen::VectorX<fvalue> omega;
+	Eigen::VectorX<std::complex<fvalue>> impedanceSpectra = eistoeigen(data, &omega);
+	return calcDrt(impedanceSpectra, omega, fm, fp);
 }
 
 
