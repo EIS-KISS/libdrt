@@ -118,7 +118,7 @@ public:
 			x[i] += 2*epsilon;
 			fvalue right = fn(x);
 			x[i] -= epsilon;
-			x[i] = (right-left)/(2*epsilon);
+			out[i] = (right-left)/(2*epsilon);
 		}
 		return out;
 	}
@@ -126,6 +126,7 @@ public:
 	fvalue operator()(Eigen::VectorX<fvalue>& x, Eigen::VectorX<fvalue>& grad)
 	{
 		grad = getGrad(std::bind(&RtFunct::function, this, std::placeholders::_1), x, epsilon);
+		std::cout<<"grad:\n"<<grad<<std::endl;
 		return function(x);
 	}
 };
