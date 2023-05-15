@@ -2,20 +2,7 @@
 #include <eisgenerator/eistype.h>
 #include <Eigen/Core>
 
-struct FitMetics
-{
-	int iterations;
-	fvalue fx;
-	bool compleated;
-};
-
-struct FitParameters
-{
-	int maxIter;
-	double epsilon;
-	double step;
-	FitParameters(int maxIterI, double epsilonI = 1e-2, double stepI = 0.001): maxIter(maxIterI), epsilon(epsilonI), step(stepI){}
-};
+#include "types.h"
 
 Eigen::VectorX<fvalue> calcDrt(Eigen::VectorX<std::complex<fvalue>>& impedanceSpectra, Eigen::VectorX<fvalue>& omegaTensor, FitMetics& fm, const FitParameters& fp);
 
