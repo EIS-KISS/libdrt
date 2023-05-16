@@ -1,0 +1,115 @@
+/*! \mainpage libeisdrt manual
+
+_libeisdrt_ is a c++ shared library to compute Distribution of Relaxation Times using Tikhonov regularization.
+_libeisdrt_ is well integrated to eisgenerator, Eigen and PyTorch.
+
+This manual is divided in the following sections depending on what datatypes you want to use libeisdrt with:
+- \ref EIGENAPI api to use in [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) applications
+- \ref TORCHAPI api to use in [libtorch/PyTorch](https://pytorch.org/) applications
+- \ref EISAPI  api to use in [eisgenerator](https://git-ce.rwth-aachen.de/carl_philipp.klemm/eisgenerator) applications
+- \ref TYPES types used by all apis
+
+
+## Building
+
+the main devolpment platform of _libeisdrt_ is linux, and _libeisdrt_ works best on UNIX-like systems, however _libeisdrt_ is fully portable and should compile on any platform that supports the requriements below
+
+### Requirments
+- [git](https://git-scm.com/) is requried to get the source
+- a C++20 compliant compiler like [gcc](https://gcc.gnu.org/)
+- [cmake](https://cmake.org/) version 3.19 or later
+- [libtorch](https://pytorch.org/get-started/locally/) is optional, but is required for libtorch Tensor support
+- [eisgenerator](https://git-ce.rwth-aachen.de/carl_philipp.klemm/eisgenerator) is optional, but is required for eisgenerator DataPoint support
+- [PkgConfig](https://www.freedesktop.org/wiki/Software/pkg-config/) is optional, but is required for eisgenerator support
+- [eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) version 4.0 or later
+
+### Procedure
+```
+$ git clone https://git-ce.rwth-aachen.de/carl_philipp.klemm/libdrt
+$ mkdir libdrt/build
+$ cd libdrt/build
+$ cmake ..
+$ make
+$ make install
+$ make doc
+```
+
+## Usage
+
+The usage of this library can be infered from the API documentation linked above and from the following eisgenerator based example.
+
+### Example usage:
+
+```
+#include <iostream>
+#include <eisgenerator/model.h>
+#include <eisgenerator/eistype.h>
+#include <eisdrt/eisdrt.h>
+
+void printImpedance(const std::vector<eis::DataPoint>& data)
+{
+	std::cout<<'[';
+	size_t colcount = 0;
+	for(const eis::DataPoint& point : data)
+	{
+		std::cout<<point.im;
+		std::cout<<' ';
+		if(++colcount > 1)
+		{
+			std::cout<<'\n';
+			colcount = 0;
+		}
+	}
+	std::cout<<"]\n";
+}
+
+void printFvalueVector(const std::vector<fvalue>& data)
+{
+	std::cout<<'[';
+	size_t colcount = 0;
+	for(fvalue point : data)
+	{
+		std::cout<<point;
+		std::cout<<' ';
+		if(++colcount > 1)
+		{
+			std::cout<<'\n';
+			colcount = 0;
+		}
+	}
+	std::cout<<"]\n";
+}
+
+int main(int argc, char** argv)
+{
+	std::cout<<std::scientific;
+
+	// specify the angular frequency range of the spectra to be
+	// simulated to be 1-1*10^6 Hz with 3 steps and log10 distrobution
+	eis::Range omega(1, 1e6, 3, true);
+
+	// specify circut to be simulated
+	eis::Model model("r{10}-r{50}p{0.02, 0.8}");
+
+	// execute a simulation
+	std::vector<eis::DataPoint> data = model.executeSweep(omega);
+
+	// print the specrum
+	printImpedance(data);
+
+	// allocate a FitMetics struct on the stack
+	FitMetics fm;
+
+	// calculate the drt for this spectrum
+	std::vector<fvalue> x = calcDrt(data, fm, FitParameters(1000));
+
+	// print some info on the drt
+	std::cout<<"Iterations: "<<fm.iterations<<'\n';
+	std::cout<<"fx "<<fm.fx<<"\ndrt: ";
+	printFvalueVector(x);
+
+	return 0;
+}
+```
+
+*/

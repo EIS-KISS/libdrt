@@ -1,4 +1,9 @@
-#include "eisdrt/drt.h"
+#include "eisdrt/eigendrt.h"
+
+#ifdef USE_EISGEN
+#include "eisdrt/eisdrt.h"
+#include "eistoeigen.h"
+#endif
 
 #include <Eigen/Core>
 #include <Eigen/StdVector>
@@ -6,21 +11,23 @@
 #include <iostream>
 
 #include "Eigen/src/Core/Matrix.h"
-#include "eistoeigen.h"
 #include "LBFG/LBFGSB.h"
 
-static Eigen::Vector<fvalue, Eigen::Dynamic> guesStartingPoint(Eigen::Vector<fvalue, Eigen::Dynamic>& omega, Eigen::Vector<std::complex<fvalue>, Eigen::Dynamic>& impedanceSpectra)
+template<typename fv>
+static Eigen::Vector<fv, Eigen::Dynamic>
+guesStartingPoint(Eigen::Vector<fv, Eigen::Dynamic>& omega, Eigen::Vector<std::complex<fv>, Eigen::Dynamic>& impedanceSpectra)
 {
-	Eigen::Vector<fvalue, Eigen::Dynamic> startingPoint = Eigen::Vector<fvalue, Eigen::Dynamic>::Zero(omega.size()+1);
+	Eigen::Vector<fv, Eigen::Dynamic> startingPoint = Eigen::Vector<fv, Eigen::Dynamic>::Zero(omega.size()+1);
 	startingPoint[startingPoint.size()-1] = std::abs(impedanceSpectra[impedanceSpectra.size()-1]);
 	return startingPoint;
 }
 
-static Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aImag(Eigen::Vector<fvalue, Eigen::Dynamic>& omega)
+template<typename fv>
+static Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aImag(Eigen::Vector<fv, Eigen::Dynamic>& omega)
 {
-	Eigen::Vector<fvalue, Eigen::Dynamic> tau = (omega * 1/static_cast<fvalue>(2*M_PI)).cwiseInverse();
-	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> out =
-		Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic>::Zero(omega.size(), omega.size());
+	Eigen::Vector<fv, Eigen::Dynamic> tau = (omega * 1/static_cast<fv>(2*M_PI)).cwiseInverse();
+	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> out =
+		Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic>::Zero(omega.size(), omega.size());
 
 	for(int32_t i = 0; i < out.cols(); ++i)
 	{
@@ -38,11 +45,12 @@ static Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aImag(Eigen::Vector
 	return out;
 }
 
-static Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aReal(Eigen::Vector<fvalue, Eigen::Dynamic>& omega)
+template<typename fv>
+static Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aReal(Eigen::Vector<fv, Eigen::Dynamic>& omega)
 {
-	Eigen::Vector<fvalue, Eigen::Dynamic> tau = (omega * 1/static_cast<fvalue>(2*M_PI)).cwiseInverse();
-	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> out =
-		Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic>::Zero(omega.size(), omega.size());
+	Eigen::Vector<fv, Eigen::Dynamic> tau = (omega * 1/static_cast<fv>(2*M_PI)).cwiseInverse();
+	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> out =
+		Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic>::Zero(omega.size(), omega.size());
 
 	for(int32_t i = 0; i < out.cols(); ++i)
 	{
@@ -60,20 +68,21 @@ static Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aReal(Eigen::Vector
 	return out;
 }
 
+template<typename fv>
 class RtFunct
 {
 private:
-	Eigen::Vector<std::complex<fvalue>, Eigen::Dynamic> impedanceSpectra;
-	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixImag;
-	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixReal;
-	fvalue el;
-	fvalue epsilon;
+	Eigen::Vector<std::complex<fv>, Eigen::Dynamic> impedanceSpectra;
+	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aMatrixImag;
+	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aMatrixReal;
+	fv el;
+	fv epsilon;
 
 public:
-	RtFunct(Eigen::Vector<std::complex<fvalue>, Eigen::Dynamic> impedanceSpectraI,
-		Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixImagI,
-		Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixRealI,
-		fvalue elI, fvalue epsilonI):
+	RtFunct(Eigen::Vector<std::complex<fv>, Eigen::Dynamic> impedanceSpectraI,
+		Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aMatrixImagI,
+		Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aMatrixRealI,
+		fv elI, fv epsilonI):
 	impedanceSpectra(impedanceSpectraI),
 	aMatrixImag(aMatrixImagI),
 	aMatrixReal(aMatrixRealI),
@@ -83,13 +92,13 @@ public:
 
 	}
 
-	fvalue function(const Eigen::Vector<fvalue, Eigen::Dynamic>& x)
+	fv function(const Eigen::Vector<fv, Eigen::Dynamic>& x)
 	{
 		int64_t size = x.size();
-		Eigen::Vector<fvalue, Eigen::Dynamic> xLeft = x.head(x.size()-1);
+		Eigen::Vector<fv, Eigen::Dynamic> xLeft = x.head(x.size()-1);
 
 		std::cout<<"aMatrixReal:\n"<<aMatrixReal<<"\nxLeft:\n"<<xLeft<<"\nx:\n"<<x<<std::endl;
-		Eigen::Vector<fvalue, Eigen::Dynamic> t = aMatrixReal*xLeft;
+		Eigen::Vector<fv, Eigen::Dynamic> t = aMatrixReal*xLeft;
 		std::cout<<"T1:\n"<<t<<std::endl;
 		t = t - impedanceSpectra.real();
 		std::cout<<"T2:\n"<<t<<std::endl;
@@ -97,33 +106,33 @@ public:
 		std::cout<<"T3:\n"<<t<<std::endl;
 		t = t.array().pow(2);
 		std::cout<<"T4:\n"<<t<<std::endl;
-		fvalue MSE_re = t.sum();
+		fv MSE_re = t.sum();
 		std::cout<<"T5:\n"<<MSE_re<<std::endl;
 
 		t = (aMatrixImag*xLeft - impedanceSpectra.imag()).array().pow(2);
-		fvalue MSE_im = t.sum();
-		fvalue reg_term = el/2*xLeft.array().pow(2).sum();
-		fvalue obj = MSE_re + MSE_im + reg_term;
+		fv MSE_im = t.sum();
+		fv reg_term = el/2*xLeft.array().pow(2).sum();
+		fv obj = MSE_re + MSE_im + reg_term;
 		return obj;
 	}
 
-	static Eigen::Vector<fvalue, Eigen::Dynamic> getGrad(std::function<fvalue(const Eigen::Vector<fvalue, Eigen::Dynamic>& x)> fn,
-													Eigen::Vector<fvalue, Eigen::Dynamic>& x, fvalue epsilon)
+	static Eigen::Vector<fv, Eigen::Dynamic> getGrad(std::function<fv(const Eigen::Vector<fv, Eigen::Dynamic>& x)> fn,
+													Eigen::Vector<fv, Eigen::Dynamic>& x, fv epsilon)
 	{
-		Eigen::Vector<fvalue, Eigen::Dynamic> out = Eigen::Vector<fvalue, Eigen::Dynamic>::Zero(x.size());
+		Eigen::Vector<fv, Eigen::Dynamic> out = Eigen::Vector<fv, Eigen::Dynamic>::Zero(x.size());
 		for(int64_t i = 0; i < out.size(); ++i)
 		{
 			x[i] -= epsilon;
-			fvalue left = fn(x);
+			fv left = fn(x);
 			x[i] += 2*epsilon;
-			fvalue right = fn(x);
+			fv right = fn(x);
 			x[i] -= epsilon;
 			out[i] = (right-left)/(2*epsilon);
 		}
 		return out;
 	}
 
-	fvalue operator()(Eigen::VectorX<fvalue>& x, Eigen::VectorX<fvalue>& grad)
+	fv operator()(Eigen::VectorX<fv>& x, Eigen::VectorX<fv>& grad)
 	{
 		grad = getGrad(std::bind(&RtFunct::function, this, std::placeholders::_1), x, epsilon);
 		std::cout<<"grad:\n"<<grad<<std::endl;
@@ -131,53 +140,78 @@ public:
 	}
 };
 
-static Eigen::Matrix<fvalue, Eigen::Dynamic, 2> calcBounds(Eigen::VectorX<std::complex<fvalue>>& impedanceSpectra, Eigen::VectorX<fvalue> startTensor)
+template<typename fv>
+static Eigen::Matrix<fv, Eigen::Dynamic, 2> calcBounds(Eigen::VectorX<std::complex<fv>>& impedanceSpectra, Eigen::VectorX<fv> startTensor)
 {
-	Eigen::VectorX<fvalue> lowerBounds = Eigen::VectorX<fvalue>::Zero(startTensor.size());
-	Eigen::VectorX<fvalue> upperBounds = Eigen::VectorX<fvalue>::Ones(startTensor.size())*impedanceSpectra.cwiseAbs().maxCoeff();
+	Eigen::VectorX<fv> lowerBounds = Eigen::VectorX<fv>::Zero(startTensor.size());
+	Eigen::VectorX<fv> upperBounds = Eigen::VectorX<fv>::Ones(startTensor.size())*impedanceSpectra.cwiseAbs().maxCoeff();
 
-	Eigen::Matrix<fvalue, Eigen::Dynamic, 2> out(lowerBounds.size(), 2);
+	Eigen::Matrix<fv, Eigen::Dynamic, 2> out(lowerBounds.size(), 2);
 	out.col(0) = lowerBounds;
 	out.col(1) = upperBounds;
 	return out;
 }
 
-Eigen::VectorX<fvalue> calcDrt(Eigen::VectorX<std::complex<fvalue>>& impedanceSpectra, Eigen::VectorX<fvalue>& omegaTensor, FitMetics& fm, const FitParameters& fp)
+template<typename fv>
+Eigen::VectorX<fv> calcDrt(Eigen::VectorX<std::complex<fv>>& impedanceSpectra, Eigen::VectorX<fv>& omegaTensor, FitMetics& fm, const FitParameters& fp)
 {
-	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixImag = aImag(omegaTensor);
-	Eigen::Matrix<fvalue, Eigen::Dynamic, Eigen::Dynamic> aMatrixReal = aReal(omegaTensor);
+	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aMatrixImag = aImag<fv>(omegaTensor);
+	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aMatrixReal = aReal<fv>(omegaTensor);
 
-	LBFGSpp::LBFGSBParam<fvalue> fitParam;
+	LBFGSpp::LBFGSBParam<fv> fitParam;
 	fitParam.epsilon = fp.epsilon;
 	fitParam.max_iterations = fp.maxIter;
 	fitParam.max_linesearch = fp.maxIter*10;
 
-	LBFGSpp::LBFGSBSolver<fvalue> solver(fitParam);
-	RtFunct funct(impedanceSpectra, aMatrixImag, aMatrixReal, 0.01, fp.step);
+	LBFGSpp::LBFGSBSolver<fv> solver(fitParam);
+	RtFunct<fv> funct(impedanceSpectra, aMatrixImag, aMatrixReal, 0.01, fp.step);
 
-	Eigen::VectorX<fvalue> x = guesStartingPoint(omegaTensor, impedanceSpectra);
+	Eigen::VectorX<fv> x = guesStartingPoint(omegaTensor, impedanceSpectra);
 	std::cout<<"StartingPoint\n"<<x<<std::endl;
-	Eigen::Matrix<fvalue, Eigen::Dynamic, 2> bounds = calcBounds(impedanceSpectra, x);
-	Eigen::VectorX<fvalue> lowerBounds = bounds.col(0);
-	Eigen::VectorX<fvalue> upperBounds = bounds.col(1);
+	Eigen::Matrix<fv, Eigen::Dynamic, 2> bounds = calcBounds(impedanceSpectra, x);
+	Eigen::VectorX<fv> lowerBounds = bounds.col(0);
+	Eigen::VectorX<fv> upperBounds = bounds.col(1);
 
-	fm.iterations = solver.minimize(funct, x, fm.fx, lowerBounds, upperBounds);
+	fv fx;
+	fm.iterations = solver.minimize(funct, x, fx, lowerBounds, upperBounds);
+	fm.fx = fx;
 
 	return x;
 }
 
-Eigen::VectorX<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm, const FitParameters& fp)
+template Eigen::VectorX<double> calcDrt<double>(Eigen::VectorX<std::complex<double>>&,
+	Eigen::VectorX<double>&, FitMetics& fm, const FitParameters& fp);
+
+template Eigen::VectorX<float> calcDrt<float>(Eigen::VectorX<std::complex<float>>&,
+	Eigen::VectorX<float>&, FitMetics& fm, const FitParameters& fp);
+
+template<typename fv>
+fv testFn()
+{
+	fv value = 0.001;
+	return value;
+}
+
+template double testFn<double>();
+
+#ifdef USE_EISGEN
+std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm, const FitParameters& fp)
 {
 	Eigen::VectorX<std::complex<fvalue>> impedanceSpectra = eistoeigen(data);
 	Eigen::VectorX<fvalue> omega = Eigen::VectorX<fvalue>::Map(omegaVector.data(), omegaVector.size());
-	return calcDrt(impedanceSpectra, omega, fm, fp);
+
+	Eigen::VectorX<fvalue> drt = calcDrt<fvalue>(impedanceSpectra, omega, fm, fp);
+	std::vector<fvalue> stdvector(drt.data(), drt.data()+drt.size());
+	return stdvector;
 }
 
-Eigen::VectorX<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& fm,  const FitParameters& fp)
+std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& fm,  const FitParameters& fp)
 {
 	Eigen::VectorX<fvalue> omega;
 	Eigen::VectorX<std::complex<fvalue>> impedanceSpectra = eistoeigen(data, &omega);
-	return calcDrt(impedanceSpectra, omega, fm, fp);
+	Eigen::VectorX<fvalue> drt = calcDrt<fvalue>(impedanceSpectra, omega, fm, fp);
+	std::vector<fvalue> stdvector(drt.data(), drt.data()+drt.size());
+	return stdvector;
 }
-
+#endif
 

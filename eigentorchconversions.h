@@ -1,17 +1,25 @@
+#include <c10/core/ScalarType.h>
 #include <climits>
+#include <eisgenerator/eistype.h>
 #include <sys/types.h>
 #include <torch/torch.h>
 #include <Eigen/Dense>
 #include <torch/types.h>
 #include <vector>
+#include <complex>
 
 #include "tensoroptions.h"
 
 template <typename V>
 bool checkTorchType(const torch::Tensor& tensor)
 {
-	static_assert(std::is_same<V, float>::value || std::is_same<V, double>::value ||
-		std::is_same<V, int64_t>::value || std::is_same<V, int32_t>::value || std::is_same<V, int8_t>::value,
+	static_assert(std::is_same<V, float>::value ||
+		std::is_same<V, double>::value ||
+		std::is_same<V, int64_t>::value ||
+		std::is_same<V, int32_t>::value ||
+		std::is_same<V, int8_t>::value ||
+		std::is_same<V, std::complex<float>>::value ||
+		std::is_same<V, std::complex<double>>::value,
 				  "This function dose not work with this type");
 	if constexpr(std::is_same<V, float>::value)
 		return tensor.dtype() == torch::kFloat32;
@@ -23,6 +31,10 @@ bool checkTorchType(const torch::Tensor& tensor)
 		return tensor.dtype() == torch::kInt32;
 	else if constexpr(std::is_same<V, int8_t>::value)
 		return tensor.dtype() == torch::kInt8;
+	else if constexpr(std::is_same<V, std::complex<float>>::value)
+		return tensor.dtype() == torch::kComplexFloat;
+	else if constexpr(std::is_same<V, std::complex<double>>::value)
+		return tensor.dtype() == torch::kComplexDouble;
 }
 
 template <typename V>
@@ -62,6 +74,8 @@ torch::Tensor eigenVector2libtorch(Eigen::Vector<V, Eigen::Dynamic> &E, bool cop
 template<typename V>
 Eigen::Matrix<V, Eigen::Dynamic, Eigen::Dynamic> libtorch2eigenMaxtrix(torch::Tensor &Tin)
 {
+	static_assert(!std::is_same<V, std::complex<float>>::value,
+		"libtorch2eigenMaxtrix can not be used for complex tensors use libtorch2eigenMaxtrixComplex instead");
 	/*
 	LibTorch is Row-major order and Eigen is Column-major order.
 	MatrixXrm uses Eigen::RowMajor for compatibility.
@@ -70,6 +84,19 @@ Eigen::Matrix<V, Eigen::Dynamic, Eigen::Dynamic> libtorch2eigenMaxtrix(torch::Te
 	Tin = Tin.contiguous();
 	auto T = Tin.to(torch::kCPU);
 	Eigen::Map<MatrixXrm<V>> E(T.data_ptr<V>(), T.size(0), T.size(1));
+	return E;
+}
+
+template<typename V>
+Eigen::Matrix<std::complex<V>, Eigen::Dynamic, Eigen::Dynamic> libtorch2eigenMaxtrixComplex(torch::Tensor &Tin)
+{
+	/*
+	LibTorch is Row-major order and Eigen is Column-major order.
+	MatrixXrm uses Eigen::RowMajor for compatibility.
+	*/
+	assert(checkTorchType<std::complex<V>>(Tin));
+	auto T = Tin.contiguous().to(torch::kCPU);
+	Eigen::Map<MatrixXrm<std::complex<V>>> E(reinterpret_cast<std::complex<V>*>(T.data_ptr<c10::complex<V>>()), T.size(0), T.size(1));
 	return E;
 }
 
