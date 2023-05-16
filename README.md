@@ -33,3 +33,7 @@ $ make
 $ make install
 $ make doc
 ```
+
+# Licence
+
+_libeisdrt_ is licenced to you under the LGPL version 3 , or (at your option) any later version. see lgpl-3.0.txt or [LGPL](https://www.gnu.org/licenses/lgpl-3.0.en.html) for details
