@@ -18,6 +18,8 @@
  */
 
 #pragma once
+#include <exception>
+#include <string>
 
 /**
 Types for use with all eisdrt apis
@@ -25,6 +27,22 @@ Types for use with all eisdrt apis
 * Types for use with all eisdrt apis
 * @{
 */
+
+
+/**
+ * @brief Exception thrown if drt could not be calcualted
+ */
+class drt_errror: public std::exception
+{
+	std::string whatStr;
+public:
+	drt_errror(const std::string& whatIn): whatStr(whatIn)
+	{}
+	virtual const char* what() const noexcept override
+	{
+		return whatStr.c_str();
+	}
+};
 
 /**
  * @brief Returned information on a fit

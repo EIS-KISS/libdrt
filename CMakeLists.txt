@@ -85,6 +85,13 @@ if(DEFINED EIS_FOUND)
 	endif(DEFINED TORCH_LIBRARIES)
 endif(DEFINED EIS_FOUND)
 
+if(DEFINED PKGCONFIG_FOUND)
+	configure_file(pkgconfig/libeisdrt_torch.pc.in pkgconfig/libeisdrt_torch.pc @ONLY)
+	configure_file(pkgconfig/libeisdrt.pc.in pkgconfig/libeisdrt.pc @ONLY)
+	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pkgconfig/libeisdrt_torch.pc DESTINATION lib/pkgconfig)
+	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pkgconfig/libeisdrt.pc DESTINATION lib/pkgconfig)
+endif(DEFINED PKGCONFIG_FOUND)
+
 set(API_HEADERS_DIR eisdrt/)
 set(API_HEADERS
 	${API_HEADERS_DIR}/eigendrt.h

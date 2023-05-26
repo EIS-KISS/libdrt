@@ -19,6 +19,8 @@
 //
 
 #include "eisdrt/eigendrt.h"
+#include "eisdrt/types.h"
+#include <stdexcept>
 
 #ifdef USE_EISGEN
 #include "eisdrt/eisdrt.h"
@@ -117,17 +119,11 @@ public:
 		int64_t size = x.size();
 		Eigen::Vector<fv, Eigen::Dynamic> xLeft = x.head(x.size()-1);
 
-		std::cout<<"aMatrixReal:\n"<<aMatrixReal<<"\nxLeft:\n"<<xLeft<<"\nx:\n"<<x<<std::endl;
 		Eigen::Vector<fv, Eigen::Dynamic> t = aMatrixReal*xLeft;
-		std::cout<<"T1:\n"<<t<<std::endl;
 		t = t - impedanceSpectra.real();
-		std::cout<<"T2:\n"<<t<<std::endl;
 		t = t.array() + x[size-1];
-		std::cout<<"T3:\n"<<t<<std::endl;
 		t = t.array().pow(2);
-		std::cout<<"T4:\n"<<t<<std::endl;
 		fv MSE_re = t.sum();
-		std::cout<<"T5:\n"<<MSE_re<<std::endl;
 
 		t = (aMatrixImag*xLeft - impedanceSpectra.imag()).array().pow(2);
 		fv MSE_im = t.sum();
@@ -155,7 +151,6 @@ public:
 	fv operator()(Eigen::VectorX<fv>& x, Eigen::VectorX<fv>& grad)
 	{
 		grad = getGrad(std::bind(&RtFunct::function, this, std::placeholders::_1), x, epsilon);
-		std::cout<<"grad:\n"<<grad<<std::endl;
 		return function(x);
 	}
 };
@@ -187,14 +182,24 @@ Eigen::VectorX<fv> calcDrt(Eigen::VectorX<std::complex<fv>>& impedanceSpectra, E
 	RtFunct<fv> funct(impedanceSpectra, aMatrixImag, aMatrixReal, 0.01, fp.step);
 
 	Eigen::VectorX<fv> x = guesStartingPoint(omegaTensor, impedanceSpectra);
-	std::cout<<"StartingPoint\n"<<x<<std::endl;
 	Eigen::Matrix<fv, Eigen::Dynamic, 2> bounds = calcBounds(impedanceSpectra, x);
 	Eigen::VectorX<fv> lowerBounds = bounds.col(0);
 	Eigen::VectorX<fv> upperBounds = bounds.col(1);
 
 	fv fx;
-	fm.iterations = solver.minimize(funct, x, fx, lowerBounds, upperBounds);
-	fm.fx = fx;
+	try
+	{
+		fm.iterations = solver.minimize(funct, x, fx, lowerBounds, upperBounds);
+		fm.fx = fx;
+	}
+	catch(const std::invalid_argument& ex)
+	{
+		throw drt_errror(std::string(ex.what()));
+	}
+	catch(const std::runtime_error& ex)
+	{
+		throw drt_errror(std::string(ex.what()));
+	}
 
 	return x;
 }
