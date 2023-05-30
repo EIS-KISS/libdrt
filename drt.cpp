@@ -240,7 +240,6 @@ std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& 
 	Eigen::VectorX<fvalue> omega;
 	Eigen::VectorX<std::complex<fvalue>> impedanceSpectra = eistoeigen(data, &omega);
 	Eigen::VectorX<fvalue> drt = calcDrt<fvalue>(impedanceSpectra, omega, fm, fp, rSeries);
-	std::cout<<omega.size()<<','<<impedanceSpectra.size()<<','<<drt.size()<<std::endl;
 	std::vector<fvalue> stdvector(drt.data(), drt.data()+drt.size());
 	return stdvector;
 }
