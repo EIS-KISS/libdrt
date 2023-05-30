@@ -1,0 +1,7 @@
+includedir=@CMAKE_INSTALL_PREFIX@/include
+
+Name: libeisdrt_torch
+Description: EIS Drt calculateing library, libtorch support
+Version: 1.0
+Libs: -L${libdir} -leisdrt_torch
+Cflags: -I${includedir}
