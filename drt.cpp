@@ -201,6 +201,10 @@ Eigen::VectorX<fv> calcDrt(Eigen::VectorX<std::complex<fv>>& impedanceSpectra, E
 	{
 		throw drt_errror(std::string(ex.what()));
 	}
+	catch(const std::logic_error& ex)
+	{
+		throw drt_errror(std::string(ex.what()));
+	}
 
 	if(rSeries)
 		*rSeries = x[x.size()-1];
