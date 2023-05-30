@@ -36,9 +36,11 @@ Api for use with eisgenerator applications
  * @param omegaVector vector with the omega values that the impedances where mesured at
  * @param fm a fit metrics struct where this function returns information on the fit aquired
  * @param fp a struct with fit parameters
+ * @param rSeries an optional paramter where the seires resistance is stored
  * @return a vector with the drt values
  */
-std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm, const FitParameters& fp);
+std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm,
+	const FitParameters& fp, fvalue* rSeries = nullptr);
 
 /**
  * @brief calculate a drt on eisgenerator types
@@ -46,9 +48,10 @@ std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::
  * @param data a vector of eisgenerator datapoints with the values to your expirament, embedded omega values are used
  * @param fm a fit metrics struct where this function returns information on the fit aquired
  * @param fp a struct with fit parameters
+ * @param rSeries an optional paramter where the seires resistance is stored
  * @return a vector with the drt values
  */
-std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& fm, const FitParameters& fp);
+std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& fm, const FitParameters& fp, fvalue* rSeries = nullptr);
 
 /**
 ....

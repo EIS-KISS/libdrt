@@ -79,12 +79,16 @@ int main(int argc, char** argv)
 	FitMetics fm;
 
 	// calculate the drt for this spectrum
-	std::vector<fvalue> x = calcDrt(data, fm, FitParameters(1000));
+	fvalue rSeries;
+	std::vector<fvalue> x = calcDrt(data, fm, FitParameters(1000), &rSeries);
+
+	assert(x.size() == data.size());
 
 	// print some info on the drt
 	std::cout<<"Iterations: "<<fm.iterations<<'\n';
 	std::cout<<"fx "<<fm.fx<<"\ndrt: ";
 	printFvalueVector(x);
+	std::cout<<"r series: "<<rSeries<<'\n';
 
 	return 0;
 }
