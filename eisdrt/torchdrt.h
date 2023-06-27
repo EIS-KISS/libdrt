@@ -41,6 +41,15 @@ Api for use with libtorch applications
 template<typename fv>
 torch::Tensor calcDrtTorch(torch::Tensor& impedanceSpectra, torch::Tensor& omegaTensor, FitMetics& fm, const FitParameters& fp);
 
+/**
+ * @brief calculates impedance from drt
+ *
+ * @tparam fv precision to be used, either double or float
+ * @param drt the drt to calcualte impedance from
+ * @return a complex tensor with the impedance spectra
+ */
+template<typename fv>
+torch::Tensor calcImpedance(torch::Tensor& drt, fv rSeries, torch::Tensor& omegaVector);
 
 /**
 ....

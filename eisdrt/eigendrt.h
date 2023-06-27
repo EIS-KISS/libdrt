@@ -40,10 +40,22 @@ Api for use with Eigen applications
  * @param rSeries an optional paramter where the seires resistance is stored
  * @return a vector with the drt values
  */
-
 template<typename fv>
 Eigen::VectorX<fv> calcDrt(Eigen::VectorX<std::complex<fv>>& impedanceSpectra, Eigen::VectorX<fv>& omegaTensor,
 	FitMetics& fm, const FitParameters& fp, fv* rSeries = nullptr);
+
+
+/**
+ * @brief calculate impedance from drt using eigen datatypes
+ *
+ * @tparam fv precision to be used, either double or float
+ * @param drt the drt to caluclate impedance from
+ * @param omegaVector vector with the omega values that the impedances where mesured at
+ * @param rSeries an optional paramter where the seires resistance is stored
+ * @return a vector with the drt values
+ */
+template<typename fv>
+Eigen::VectorX<std::complex<fv>> calcImpedance(const Eigen::VectorX<fv>& drt, fv rSeries, const  Eigen::VectorX<fv>& omegaVector);
 
 /**
 ....

@@ -54,6 +54,26 @@ std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::
 std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& fm, const FitParameters& fp, fvalue* rSeries = nullptr);
 
 /**
+ * @brief calculate impedance from drt using eisgenerator datatypes
+ *
+ * @param drt the drt to caluclate impedance from
+ * @param omegaVector vector with the omega values that the impedances where mesured at
+ * @param rSeries an optional paramter where the seires resistance is stored
+ * @return a vector with the impedance values
+ */
+std::vector<eis::DataPoint> calcImpedance(const std::vector<fvalue>& drt, fvalue rSeries, const std::vector<fvalue>& omegaVector);
+
+/**
+ * @brief calculate impedance from drt using eisgenerator datatypes
+ *
+ * @param drt the drt to caluclate impedance from
+ * @param omegaRange range that describes the omega values the drt was taken at
+ * @param rSeries an optional paramter where the seires resistance is stored
+ * @return a vector with the impedance values
+ */
+std::vector<eis::DataPoint> calcImpedance(const std::vector<fvalue>& drt, fvalue rSeries, const eis::Range& omegaRange);
+
+/**
 ....
 * @}
 */

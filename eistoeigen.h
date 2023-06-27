@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include "Eigen/src/Core/Matrix.h"
 #include <Eigen/Core>
 #include <eisgenerator/eistype.h>
 #include <vector>
@@ -37,6 +38,22 @@ Eigen::VectorX<std::complex<fvalue>> eistoeigen(const std::vector<eis::DataPoint
 		out[i] = data[i].im;
 		if(omega)
 			(*omega)[i] = data[i].omega;
+	}
+	return out;
+}
+
+std::vector<eis::DataPoint> eigentoeis(const Eigen::VectorX<std::complex<fvalue>>& data, const Eigen::Vector<fvalue, Eigen::Dynamic>* omega = nullptr)
+{
+	assert(!omega || omega->size() == data.size());
+	std::vector<eis::DataPoint> out(data.size());
+
+	for(ssize_t i = 0 ; i < data.size(); ++i)
+	{
+		out[i].im = data[i];
+		if(omega)
+			out[i].omega = (*omega)[i];
+		else
+			out[i].omega = -1;
 	}
 	return out;
 }

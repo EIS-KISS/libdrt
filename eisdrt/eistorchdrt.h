@@ -32,6 +32,8 @@ torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, const std::v
 
 torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, FitMetics& fm,  const FitParameters& fp);
 
+torch::Tensor calcImpedance(torch::Tensor& drt, fvalue rSeries, const std::vector<fvalue>& omegaVector);
+
 /**
 ....
 * @}

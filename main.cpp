@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 
 	// specify the angular frequency range of the spectra to be
 	// simulated to be 1-1*10^6 Hz with 3 steps and log10 distrobution
-	eis::Range omega(1, 1e6, 3, true);
+	eis::Range omega(1, 1e6, 10, true);
 
 	// specify circut to be simulated
 	eis::Model model("r{10}-r{50}p{0.02, 0.8}");
@@ -84,11 +84,17 @@ int main(int argc, char** argv)
 
 	assert(x.size() == data.size());
 
+	std::vector<eis::DataPoint> recalculatedSpectra = calcImpedance(x, rSeries, omega);
+	fvalue dist = eisNyquistDistance(data, recalculatedSpectra);
+
 	// print some info on the drt
 	std::cout<<"Iterations: "<<fm.iterations<<'\n';
 	std::cout<<"fx "<<fm.fx<<"\ndrt: ";
 	printFvalueVector(x);
 	std::cout<<"r series: "<<rSeries<<'\n';
+	std::cout<<"dist: "<<dist<<'\n';
+	std::cout<<"recalculatedSpectra:\n";
+	printImpedance(recalculatedSpectra);
 
-	return 0;
+	return dist < 2 ? 0 : 1;
 }

@@ -219,13 +219,25 @@ template Eigen::VectorX<float> calcDrt<float>(Eigen::VectorX<std::complex<float>
 	Eigen::VectorX<float>&, FitMetics& fm, const FitParameters& fp, float* rSeries);
 
 template<typename fv>
-fv testFn()
+Eigen::VectorX<std::complex<fv>> calcImpedance(const Eigen::VectorX<fv>& drt, fv rSeries, Eigen::VectorX<fv>& omegaVector)
 {
-	fv value = 0.001;
-	return value;
+	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aMatrixImag = aImag<fv>(omegaVector);
+	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aMatrixReal = aReal<fv>(omegaVector);
+
+	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> realMul = aMatrixReal*drt;
+	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> imagMul = aMatrixImag*drt;
+	Eigen::Matrix<std::complex<fv>, Eigen::Dynamic, Eigen::Dynamic> realMulCplx = realMul.template cast<std::complex<fv>>();
+	Eigen::Matrix<std::complex<fv>, Eigen::Dynamic, Eigen::Dynamic> imagMulCplx = imagMul.template cast<std::complex<fv>>()*std::complex<fv>(0,1);
+
+	Eigen::VectorX<std::complex<fv>> z = ((realMulCplx + imagMulCplx).array() + std::complex<fv>(rSeries,0)).matrix();
+	return z;
 }
 
-template double testFn<double>();
+template Eigen::VectorX<std::complex<double>> calcImpedance<double>(const Eigen::VectorX<double>& drt, double rSeries,
+	Eigen::VectorX<double>& omegaVector);
+template Eigen::VectorX<std::complex<float>> calcImpedance<float>(const Eigen::VectorX<float>& drt, float rSeries,
+	Eigen::VectorX<float>& omegaVector);
+
 
 #ifdef USE_EISGEN
 std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector,
@@ -246,6 +258,20 @@ std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& 
 	Eigen::VectorX<fvalue> drt = calcDrt<fvalue>(impedanceSpectra, omega, fm, fp, rSeries);
 	std::vector<fvalue> stdvector(drt.data(), drt.data()+drt.size());
 	return stdvector;
+}
+
+std::vector<eis::DataPoint> calcImpedance(const std::vector<fvalue>& drt, fvalue rSeries, const std::vector<fvalue>& omegaVector)
+{
+	Eigen::VectorX<fvalue> omega = Eigen::VectorX<fvalue>::Map(omegaVector.data(), omegaVector.size());
+
+	Eigen::VectorX<fvalue> drtVec = Eigen::VectorX<fvalue>::Map(drt.data(), drt.size());
+	Eigen::VectorX<std::complex<fvalue>> spectra = calcImpedance<fvalue>(drtVec, rSeries, omega);
+	return eigentoeis(spectra, &omega);
+}
+
+std::vector<eis::DataPoint> calcImpedance(const std::vector<fvalue>& drt, fvalue rSeries, const eis::Range& omegaRange)
+{
+	return calcImpedance(drt, rSeries, omegaRange.getRangeVector());
 }
 #endif
 
