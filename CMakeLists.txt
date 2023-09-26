@@ -50,7 +50,7 @@ else (DOXYGEN_FOUND)
 endif (DOXYGEN_FOUND)
 
 add_library(${PROJECT_NAME} SHARED drt.cpp)
-target_link_libraries(${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${EIS_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${EIS_LIBRARIES} -leisgenerator)
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIRS} ${EIS_INCLUDE_DIRS} ./LBFG)
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-Wall -O2 -march=native -g" LINK_FLAGS "-flto")
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
