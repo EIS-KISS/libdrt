@@ -3,7 +3,7 @@
 _libeisdrt_ is a c++ shared library to compute Distribution of Relaxation Times using Tikhonov regularization.
 _libeisdrt_ is well integrated to eisgenerator, Eigen and PyTorch.
 
-Full documentaton can be found [git](https://uvos.xyz/kiss/libdrtdoc) or by building the doc target
+Full documentaton can be found [here](https://uvos.xyz/kiss/libdrtdoc) or by building the doc target
 
 ## Building
 
