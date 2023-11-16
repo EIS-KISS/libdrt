@@ -24,7 +24,7 @@
 
 #include "eisdrt/eisdrt.h"
 
-void printImpedance(const std::vector<eis::DataPoint>& data)
+static void printImpedance(const std::vector<eis::DataPoint>& data)
 {
 	std::cout<<'[';
 	size_t colcount = 0;
@@ -41,7 +41,7 @@ void printImpedance(const std::vector<eis::DataPoint>& data)
 	std::cout<<"]\n";
 }
 
-void printFvalueVector(const std::vector<fvalue>& data)
+static void printFvalueVector(const std::vector<fvalue>& data)
 {
 	std::cout<<'[';
 	size_t colcount = 0;

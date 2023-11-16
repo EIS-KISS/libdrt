@@ -75,6 +75,13 @@ if(DEFINED EIS_FOUND)
 	target_include_directories(${PROJECT_NAME}_test PRIVATE . ${EIGEN3_INCLUDE_DIRS} ${EIS_INCLUDE_DIRS})
 	set_target_properties(${PROJECT_NAME}_test PROPERTIES COMPILE_FLAGS "-Wall -O2 -march=native -g" LINK_FLAGS "-flto")
 
+	link_directories(${CMAKE_CURRENT_BINARY_DIR})
+	add_executable(${PROJECT_NAME}_cli cli.cpp)
+	add_dependencies(${PROJECT_NAME}_cli ${PROJECT_NAME})
+	target_link_libraries(${PROJECT_NAME}_cli -l${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${EIS_LIBRARIES})
+	target_include_directories(${PROJECT_NAME}_cli PRIVATE . ${EIGEN3_INCLUDE_DIRS} ${EIS_INCLUDE_DIRS})
+	set_target_properties(${PROJECT_NAME}_cli PROPERTIES COMPILE_FLAGS "-Wall -O2 -march=native -g" LINK_FLAGS "-flto")
+
 	if(DEFINED TORCH_LIBRARIES)
 		link_directories(${CMAKE_CURRENT_BINARY_DIR})
 		add_executable(${PROJECT_NAME}_test_torch testtorchdrt.cpp eistotorch.cpp)
