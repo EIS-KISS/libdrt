@@ -31,6 +31,10 @@ $ make install
 $ make doc
 ```
 
+### Linking
+
+it is best to link to this library with the help of [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/) as this provides platform a agnostic to query for paths and flags. Almost certenly, pkg-config is already integrated into your buildsystem.
+
 # Licence
 
 _libeisdrt_ is licenced to you under the LGPL version 3 , or (at your option) any later version. see lgpl-3.0.txt or [LGPL](https://www.gnu.org/licenses/lgpl-3.0.en.html) for details
