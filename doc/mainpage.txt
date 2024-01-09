@@ -12,11 +12,11 @@ This manual is divided in the following sections depending on what datatypes you
 
 ## Building
 
-the main devolpment platform of _libeisdrt_ is linux, and _libeisdrt_ works best on UNIX-like systems, however _libeisdrt_ is fully portable and should compile on any platform that supports the requriements below
+the main development platform of _libeisdrt_ is Linux, and _libeisdrt_ works best on UNIX-like systems, however _libeisdrt_ is fully portable and should compile on any platform that supports the requirements below
 
-### Requirments
-- [git](https://git-scm.com/) is requried to get the source
-- a C++20 compliant compiler like [gcc](https://gcc.gnu.org/)
+### Requirements
+- [git](https://git-scm.com/) is required to get the source
+- a C++20 compliant compiler like [GCC](https://gcc.gnu.org/)
 - [cmake](https://cmake.org/) version 3.19 or later
 - [libtorch](https://pytorch.org/get-started/locally/) is optional, but is required for libtorch Tensor support
 - [eisgenerator](https://git-ce.rwth-aachen.de/carl_philipp.klemm/eisgenerator) is optional, but is required for eisgenerator DataPoint support
@@ -36,7 +36,7 @@ $ make doc
 
 ## Usage
 
-The usage of this library can be infered from the API documentation linked above and from the following eisgenerator based example.
+The usage of this library can be inferred from the API documentation linked above and from the following eisgenerator based example.
 
 ### Example usage:
 
@@ -112,8 +112,8 @@ int main(int argc, char** argv)
 }
 ```
 
-# Licence
+# License
 
-_libeisdrt_ is licenced to you under the LGPL version 3 , or (at your option) any later version. see lgpl-3.0.txt or [LGPL](https://www.gnu.org/licenses/lgpl-3.0.en.html) for details
+_libeisdrt_ is licensed to you under the LGPL version 3 , or (at your option) any later version. see lgpl-3.0.txt or [LGPL](https://www.gnu.org/licenses/lgpl-3.0.en.html) for details
 
 */

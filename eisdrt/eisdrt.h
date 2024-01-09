@@ -23,7 +23,7 @@
 #include "types.h"
 
 /**
-Api for use with eisgenerator applications
+API for use with eisgenerator applications
 * @defgroup EISAPI eisgenerator API
 * calculates drts with eisgenerator datatypes
 * @{
@@ -32,11 +32,11 @@ Api for use with eisgenerator applications
 /**
  * @brief calculate a drt on eisgenerator types
  *
- * @param data a vector of eisgenerator datapoints with the values to your expirament, embedded omega values are ignored
- * @param omegaVector vector with the omega values that the impedances where mesured at
- * @param fm a fit metrics struct where this function returns information on the fit aquired
+ * @param data a vector of eisgenerator data points with the values to your experiment, embedded omega values are ignored
+ * @param omegaVector vector with the omega values that the impedances where measured at
+ * @param fm a fit metrics struct where this function returns information on the fit acquired
  * @param fp a struct with fit parameters
- * @param rSeries an optional paramter where the seires resistance is stored
+ * @param rSeries an optional parameter where the series resistance is stored
  * @return a vector with the drt values
  */
 std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm,
@@ -45,10 +45,10 @@ std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::
 /**
  * @brief calculate a drt on eisgenerator types
  *
- * @param data a vector of eisgenerator datapoints with the values to your expirament, embedded omega values are used
- * @param fm a fit metrics struct where this function returns information on the fit aquired
+ * @param data a vector of eisgenerator data points with the values to your experiment, embedded omega values are used
+ * @param fm a fit metrics struct where this function returns information on the fit acquired
  * @param fp a struct with fit parameters
- * @param rSeries an optional paramter where the seires resistance is stored
+ * @param rSeries an optional parameter where the series resistance is stored
  * @return a vector with the drt values
  */
 std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& fm, const FitParameters& fp, fvalue* rSeries = nullptr);
@@ -56,9 +56,9 @@ std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& 
 /**
  * @brief calculate impedance from drt using eisgenerator datatypes
  *
- * @param drt the drt to caluclate impedance from
- * @param omegaVector vector with the omega values that the impedances where mesured at
- * @param rSeries an optional paramter where the seires resistance is stored
+ * @param drt the drt to calculate impedance from
+ * @param omegaVector vector with the omega values that the impedances where measured at
+ * @param rSeries an optional parameter where the series resistance is stored
  * @return a vector with the impedance values
  */
 std::vector<eis::DataPoint> calcImpedance(const std::vector<fvalue>& drt, fvalue rSeries, const std::vector<fvalue>& omegaVector);
@@ -66,9 +66,9 @@ std::vector<eis::DataPoint> calcImpedance(const std::vector<fvalue>& drt, fvalue
 /**
  * @brief calculate impedance from drt using eisgenerator datatypes
  *
- * @param drt the drt to caluclate impedance from
+ * @param drt the drt to calculate impedance from
  * @param omegaRange range that describes the omega values the drt was taken at
- * @param rSeries an optional paramter where the seires resistance is stored
+ * @param rSeries an optional parameter where the series resistance is stored
  * @return a vector with the impedance values
  */
 std::vector<eis::DataPoint> calcImpedance(const std::vector<fvalue>& drt, fvalue rSeries, const eis::Range& omegaRange);
