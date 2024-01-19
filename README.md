@@ -1,5 +1,3 @@
-[comment]: \page README Readme
-
 # libeisdrt
 
 _libeisdrt_ is a c++ shared library to compute Distribution of Relaxation Times using Tikhonov regularization.

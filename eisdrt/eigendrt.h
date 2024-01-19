@@ -23,22 +23,23 @@
 #include "types.h"
 
 /**
-API for use with Eigen applications
+* API for use with Eigen applications
 * @defgroup EIGENAPI Eigen API
-* calculates drts with Eigen datatypes
+*
+* Calculates drts with Eigen datatypes.
 * @{
 */
 
 /**
- * @brief calculate the drt using Eigen datatypes
+ * @brief Calculates the drt using Eigen datatypes.
  *
- * @tparam fv precision to be used, either double or float
- * @param impedanceSpectra vector with the complex impedances of your experiment
- * @param omegaTensor vector with the omega values that the impedances where measured at
- * @param fm a fit metrics struct where this function returns information on the fit acquired
- * @param fp a struct with fit parameters
- * @param rSeries an optional parameter where the series resistance is stored
- * @return a vector with the drt values
+ * @tparam fv The precision to be used, either double or float.
+ * @param impedanceSpectra A vector with the complex impedances of your experiment.
+ * @param omegaTensor A vector with the omega values that the impedances where measured at.
+ * @param fm A fit metrics struct where this function returns information on the fit acquired.
+ * @param fp A struct with fit parameters.
+ * @param rSeries An optional parameter where the series resistance is stored.
+ * @return A vector with the drt values.
  */
 template<typename fv>
 Eigen::VectorX<fv> calcDrt(Eigen::VectorX<std::complex<fv>>& impedanceSpectra, Eigen::VectorX<fv>& omegaTensor,
@@ -46,13 +47,13 @@ Eigen::VectorX<fv> calcDrt(Eigen::VectorX<std::complex<fv>>& impedanceSpectra, E
 
 
 /**
- * @brief calculate impedance from drt using Eigen datatypes
+ * @brief Calculates impedance from drt using Eigen datatypes.
  *
- * @tparam fv precision to be used, either double or float
- * @param drt the drt to calculate impedance from
- * @param omegaVector vector with the omega values that the impedances where measured at
- * @param rSeries an optional parameter where the series resistance is stored
- * @return a vector with the drt values
+ * @tparam fv The precision to be used, either double or float.
+ * @param drt The drt to calculate impedance from.
+ * @param omegaVector A vector with the omega values that the impedances where measured at.
+ * @param rSeries An optional parameter where the series resistance is stored.
+ * @return A vector with the drt values.
  */
 template<typename fv>
 Eigen::VectorX<std::complex<fv>> calcImpedance(const Eigen::VectorX<fv>& drt, fv rSeries, const  Eigen::VectorX<fv>& omegaVector);

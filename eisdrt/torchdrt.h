@@ -29,24 +29,24 @@ Api for use with libtorch applications
 */
 
 /**
- * @brief calculate a drt on eisgenerator types
+ * @brief Calculates a drt on eisgenerator types.
  *
- * @tparam fv precision to be used, either double or float
- * @param impedanceSpectra a 1d complex tensor with the impedance measurement data points
- * @param omegaTensor a 1d tensor with the omega values that the impedances where measured at
- * @param fm a fit metrics struct where this function returns information on the fit acquired
- * @param fp a struct with fit parameters
- * @return a 1d tensor with the drt values
+ * @tparam fv The Precision to be used, either double or float.
+ * @param impedanceSpectra A 1d complex tensor with the impedance measurement data points.
+ * @param omegaTensor A 1d tensor with the omega values that the impedances where measured at.
+ * @param fm A fit metrics struct where this function returns information on the fit acquired.
+ * @param fp A struct with fit parameters.
+ * @return A 1d tensor with the drt values.
  */
 template<typename fv>
 torch::Tensor calcDrtTorch(torch::Tensor& impedanceSpectra, torch::Tensor& omegaTensor, FitMetics& fm, const FitParameters& fp);
 
 /**
- * @brief calculates impedance from drt
+ * @brief Calculates impedance from drt.
  *
- * @tparam fv precision to be used, either double or float
- * @param drt the drt to calculate impedance from
- * @return a complex tensor with the impedance spectra
+ * @tparam fv The Precision to be used, either double or float.
+ * @param drt The drt to calculate impedance from.
+ * @return A complex tensor with the impedance spectra.
  */
 template<typename fv>
 torch::Tensor calcImpedance(torch::Tensor& drt, fv rSeries, torch::Tensor& omegaVector);

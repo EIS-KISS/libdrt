@@ -30,7 +30,7 @@ Types for use with all eisdrt apis
 
 
 /**
- * @brief Exception thrown if drt could not be calculated
+ * @brief This exception thrown if drt could not be calculated.
  */
 class drt_errror: public std::exception
 {
@@ -45,7 +45,7 @@ public:
 };
 
 /**
- * @brief Returned information on a fit
+ * @brief This is used to return information on a fit.
  */
 struct FitMetics
 {
