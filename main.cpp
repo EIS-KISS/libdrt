@@ -75,8 +75,8 @@ int main(int argc, char** argv)
 	// print the specrum
 	printImpedance(data);
 
-	// allocate a FitMetics struct on the stack
-	FitMetics fm;
+	// allocate a FitMetrics struct on the stack
+	FitMetrics fm;
 
 	// calculate the drt for this spectrum
 	fvalue rSeries;

@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 	// simulated to be 1-1*10^6 Hz with 3 steps and log10 distrobution
 	eis::Range omega(1, 1e6, 3, true);
 
-	// specify circut to be simulated
+	// specify circuit to be simulated
 	eis::Model model("r{10}-r{50}p{0.02, 0.8}");
 
 	// execute a simulation
@@ -97,8 +97,8 @@ int main(int argc, char** argv)
 	// print the specrum
 	printImpedance(data);
 
-	// allocate a FitMetics struct on the stack
-	FitMetics fm;
+	// allocate a FitMetrics struct on the stack
+	FitMetrics fm;
 
 	// calculate the drt for this spectrum
 	std::vector<fvalue> x = calcDrt(data, fm, FitParameters(1000));

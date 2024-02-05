@@ -32,11 +32,11 @@ Types for use with all eisdrt apis
 /**
  * @brief This exception thrown if drt could not be calculated.
  */
-class drt_errror: public std::exception
+class drt_error: public std::exception
 {
 	std::string whatStr;
 public:
-	drt_errror(const std::string& whatIn): whatStr(whatIn)
+	drt_error(const std::string& whatIn): whatStr(whatIn)
 	{}
 	virtual const char* what() const noexcept override
 	{
@@ -47,7 +47,7 @@ public:
 /**
  * @brief This is used to return information on a fit.
  */
-struct FitMetics
+struct FitMetrics
 {
 	int iterations;	/**< how many iterations where used */
 	double fx;		/**< error function value remaining after fit */

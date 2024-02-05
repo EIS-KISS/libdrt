@@ -39,7 +39,7 @@ Api for use with libtorch applications
  * @return A 1d tensor with the drt values.
  */
 template<typename fv>
-torch::Tensor calcDrtTorch(torch::Tensor& impedanceSpectra, torch::Tensor& omegaTensor, FitMetics& fm, const FitParameters& fp);
+torch::Tensor calcDrtTorch(torch::Tensor& impedanceSpectra, torch::Tensor& omegaTensor, FitMetrics& fm, const FitParameters& fp);
 
 /**
  * @brief Calculates impedance from drt.

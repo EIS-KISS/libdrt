@@ -169,7 +169,7 @@ static Eigen::Matrix<fv, Eigen::Dynamic, 2> calcBounds(Eigen::VectorX<std::compl
 
 template<typename fv>
 Eigen::VectorX<fv> calcDrt(Eigen::VectorX<std::complex<fv>>& impedanceSpectra, Eigen::VectorX<fv>& omegaTensor,
-	FitMetics& fm, const FitParameters& fp, fv* rSeries)
+	FitMetrics& fm, const FitParameters& fp, fv* rSeries)
 {
 	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aMatrixImag = aImag<fv>(omegaTensor);
 	Eigen::Matrix<fv, Eigen::Dynamic, Eigen::Dynamic> aMatrixReal = aReal<fv>(omegaTensor);
@@ -195,15 +195,15 @@ Eigen::VectorX<fv> calcDrt(Eigen::VectorX<std::complex<fv>>& impedanceSpectra, E
 	}
 	catch(const std::invalid_argument& ex)
 	{
-		throw drt_errror(std::string(ex.what()));
+		throw drt_error(std::string(ex.what()));
 	}
 	catch(const std::runtime_error& ex)
 	{
-		throw drt_errror(std::string(ex.what()));
+		throw drt_error(std::string(ex.what()));
 	}
 	catch(const std::logic_error& ex)
 	{
-		throw drt_errror(std::string(ex.what()));
+		throw drt_error(std::string(ex.what()));
 	}
 
 	if(rSeries)
@@ -213,10 +213,10 @@ Eigen::VectorX<fv> calcDrt(Eigen::VectorX<std::complex<fv>>& impedanceSpectra, E
 }
 
 template Eigen::VectorX<double> calcDrt<double>(Eigen::VectorX<std::complex<double>>&,
-	Eigen::VectorX<double>&, FitMetics& fm, const FitParameters& fp, double* rSeries);
+	Eigen::VectorX<double>&, FitMetrics& fm, const FitParameters& fp, double* rSeries);
 
 template Eigen::VectorX<float> calcDrt<float>(Eigen::VectorX<std::complex<float>>&,
-	Eigen::VectorX<float>&, FitMetics& fm, const FitParameters& fp, float* rSeries);
+	Eigen::VectorX<float>&, FitMetrics& fm, const FitParameters& fp, float* rSeries);
 
 template<typename fv>
 Eigen::VectorX<std::complex<fv>> calcImpedance(const Eigen::VectorX<fv>& drt, fv rSeries, Eigen::VectorX<fv>& omegaVector)
@@ -241,7 +241,7 @@ template Eigen::VectorX<std::complex<float>> calcImpedance<float>(const Eigen::V
 
 #ifdef USE_EISGEN
 std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector,
-	FitMetics& fm, const FitParameters& fp, fvalue* rSeries)
+	FitMetrics& fm, const FitParameters& fp, fvalue* rSeries)
 {
 	Eigen::VectorX<std::complex<fvalue>> impedanceSpectra = eistoeigen(data);
 	Eigen::VectorX<fvalue> omega = Eigen::VectorX<fvalue>::Map(omegaVector.data(), omegaVector.size());
@@ -251,7 +251,7 @@ std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::
 	return stdvector;
 }
 
-std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& fm,  const FitParameters& fp, fvalue* rSeries)
+std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetrics& fm,  const FitParameters& fp, fvalue* rSeries)
 {
 	Eigen::VectorX<fvalue> omega;
 	Eigen::VectorX<std::complex<fvalue>> impedanceSpectra = eistoeigen(data, &omega);

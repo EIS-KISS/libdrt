@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 	std::vector<eis::DataPoint> data = model.executeSweep(omega);
 	printImpedance(data);
 
-	FitMetics fm = {};
+	FitMetrics fm = {};
 	torch::Tensor drt = calcDrtTorch(data, fm, FitParameters(1000));
 
 	std::cout<<"Iterations: "<<fm.iterations<<'\n';

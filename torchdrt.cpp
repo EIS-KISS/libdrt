@@ -31,7 +31,7 @@
 
 
 template<typename fv>
-torch::Tensor calcDrtTorch(torch::Tensor& impedanceSpectra, torch::Tensor& omegaTensor, FitMetics& fm, const FitParameters& fp)
+torch::Tensor calcDrtTorch(torch::Tensor& impedanceSpectra, torch::Tensor& omegaTensor, FitMetrics& fm, const FitParameters& fp)
 {
 	assert(checkTorchType<std::complex<fv>>(impedanceSpectra));
 	Eigen::Vector<std::complex<fv>, Eigen::Dynamic> impedanceSpectraEigen =
@@ -46,7 +46,7 @@ torch::Tensor calcDrtTorch(torch::Tensor& impedanceSpectra, torch::Tensor& omega
 }
 
 #ifdef USE_EISGEN
-torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm,  const FitParameters& fp)
+torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetrics& fm,  const FitParameters& fp)
 {
 	Eigen::VectorX<std::complex<fvalue>> impedanceSpectra = eistoeigen(data);
 	Eigen::VectorX<fvalue> omega = Eigen::VectorX<fvalue>::Map(omegaVector.data(), omegaVector.size());
@@ -55,7 +55,7 @@ torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, const std::v
 	return outputTensor;
 }
 
-torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, FitMetics& fm,  const FitParameters& fp)
+torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, FitMetrics& fm,  const FitParameters& fp)
 {
 	Eigen::VectorX<fvalue> omega;
 	Eigen::VectorX<std::complex<fvalue>> impedanceSpectra = eistoeigen(data, &omega);

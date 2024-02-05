@@ -40,7 +40,7 @@
  * @param rSeries An optional parameter where the series resistance is stored.
  * @return A vector with the drt values.
  */
-std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm,
+std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetrics& fm,
 	const FitParameters& fp, fvalue* rSeries = nullptr);
 
 /**
@@ -52,14 +52,14 @@ std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, const std::
  * @param rSeries An optional parameter where the series resistance is stored.
  * @return A vector with the drt values.
  */
-std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetics& fm, const FitParameters& fp, fvalue* rSeries = nullptr);
+std::vector<fvalue> calcDrt(const std::vector<eis::DataPoint>& data, FitMetrics& fm, const FitParameters& fp, fvalue* rSeries = nullptr);
 
 /**
  * @brief Calculate impedance from drt using eisgenerator datatypes.
  *
  * @param drt The drt to calculate impedance from.
  * @param omegaVector A vector with the omega values that the impedances where measured at.
- * @param rSeries An optional parameter where the series resistance is stored.
+ * @param rSeries A parameter giving the series resistance.
  * @return A vector with the impedance values.
  */
 std::vector<eis::DataPoint> calcImpedance(const std::vector<fvalue>& drt, fvalue rSeries, const std::vector<fvalue>& omegaVector);
@@ -69,7 +69,7 @@ std::vector<eis::DataPoint> calcImpedance(const std::vector<fvalue>& drt, fvalue
  *
  * @param drt The drt to calculate impedance from.
  * @param omegaRange A range that describes the omega values the drt was taken at.
- * @param rSeries An optional parameter where the series resistance is stored.
+ * @param rSeries A parameter giving the series resistance.
  * @return A vector with the impedance values.
  */
 std::vector<eis::DataPoint> calcImpedance(const std::vector<fvalue>& drt, fvalue rSeries, const eis::Range& omegaRange);

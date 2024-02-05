@@ -39,7 +39,7 @@
  * @param fp A struct with fit parameters.
  * @return A complex tensor with the drt values.
  */
-torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetics& fm,  const FitParameters& fp);
+torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, const std::vector<fvalue>& omegaVector, FitMetrics& fm,  const FitParameters& fp);
 
 /**
  * @brief Calculates impedance from drt using torch datatypes.
@@ -49,7 +49,7 @@ torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, const std::v
  * @param fp A struct with fit parameters.
  * @return A complex tensor with the drt values.
  */
-torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, FitMetics& fm,  const FitParameters& fp);
+torch::Tensor calcDrtTorch(const std::vector<eis::DataPoint>& data, FitMetrics& fm,  const FitParameters& fp);
 
 
 /**

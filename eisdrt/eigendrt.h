@@ -43,7 +43,7 @@
  */
 template<typename fv>
 Eigen::VectorX<fv> calcDrt(Eigen::VectorX<std::complex<fv>>& impedanceSpectra, Eigen::VectorX<fv>& omegaTensor,
-	FitMetics& fm, const FitParameters& fp, fv* rSeries = nullptr);
+	FitMetrics& fm, const FitParameters& fp, fv* rSeries = nullptr);
 
 
 /**

@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 
 		if(!toStdout)
 			std::cout<<"Calculateing Drt\n";
-		FitMetics fm;
+		FitMetrics fm;
 		std::vector<fvalue> drt = calcDrt(spectra.data, fm, FitParameters(1000));
 
 		if(!toStdout)
