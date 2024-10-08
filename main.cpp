@@ -20,7 +20,7 @@
 
 #include <iostream>
 #include <eisgenerator/model.h>
-#include <eisgenerator/eistype.h>
+#include <kisstype/type.h>
 #include <eisgenerator/basicmath.h>
 
 #include "eisdrt/eisdrt.h"

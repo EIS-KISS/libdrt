@@ -19,7 +19,8 @@
 //
 
 #include <iostream>
-#include <eisgenerator/eistype.h>
+#include <kisstype/type.h>
+#include <kisstype/spectra.h>
 
 #include "eisdrt/eisdrt.h"
 
@@ -40,10 +41,10 @@ static void print_drt(const std::vector<fvalue>& data)
 	std::cout<<"]\n";
 }
 
-static eis::EisSpectra transform_to_drt_spectra(const std::vector<fvalue>& drt, const eis::EisSpectra& spectra)
+static eis::Spectra transform_to_drt_spectra(const std::vector<fvalue>& drt, const eis::Spectra& spectra)
 {
 	assert(spectra.data.size() == drt.size());
-	eis::EisSpectra drtSpectra = spectra;
+	eis::Spectra drtSpectra = spectra;
 	drtSpectra.data.clear();
 	drtSpectra.data.reserve(drt.size());
 
@@ -70,18 +71,18 @@ int main(int argc, char** argv)
 
 	try
 	{
-		eis::EisSpectra spectra;
+		eis::Spectra spectra;
 		if(std::string(argv[1]) != "-")
 		{
 			if(!toStdout)
 				std::cout<<"Loading spectra\n";
-			spectra = eis::EisSpectra::loadFromDisk(argv[1]);
+			spectra = eis::Spectra::loadFromDisk(argv[1]);
 		}
 		else
 		{
 			if(!toStdout)
 				std::cout<<"Waiting for spectra on stdin\n";
-			spectra = eis::EisSpectra::loadFromStream(std::cin);
+			spectra = eis::Spectra::loadFromStream(std::cin);
 		}
 
 		if(!toStdout)
@@ -95,17 +96,11 @@ int main(int argc, char** argv)
 			print_drt(drt);
 		}
 
-		eis::EisSpectra drtSpectra = transform_to_drt_spectra(drt, spectra);
-		bool ret = true;
+		eis::Spectra drtSpectra = transform_to_drt_spectra(drt, spectra);
 		if(!toStdout)
-			ret = drtSpectra.saveToDisk(argv[2]);
+			drtSpectra.saveToDisk(argv[2]);
 		else
 			drtSpectra.saveToStream(std::cout);
-		if(!ret)
-		{
-			std::cerr<<"Could not save spectra to "<<argv[2]<<'\n';
-			return 1;
-		}
 	}
 	catch(const eis::file_error& err)
 	{

@@ -19,7 +19,6 @@
 
 #include <c10/core/ScalarType.h>
 #include <climits>
-#include <eisgenerator/eistype.h>
 #include <sys/types.h>
 #include <torch/torch.h>
 #include <Eigen/Dense>

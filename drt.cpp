@@ -29,8 +29,6 @@
 
 #include <Eigen/Core>
 #include <Eigen/StdVector>
-#include <eisgenerator/eistype.h>
-#include <iostream>
 
 #include "Eigen/src/Core/Matrix.h"
 #include "LBFG/LBFGSB.h"

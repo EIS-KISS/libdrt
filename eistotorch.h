@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <eisgenerator/eistype.h>
+#include <kisstype/type.h>
 #include <torch/torch.h>
 
 #include <vector>

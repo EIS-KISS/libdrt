@@ -23,7 +23,7 @@
 
 #include "Eigen/src/Core/Matrix.h"
 #include <Eigen/Core>
-#include <eisgenerator/eistype.h>
+#include <kisstype/type.h>
 #include <vector>
 
 Eigen::VectorX<std::complex<fvalue>> eistoeigen(const std::vector<eis::DataPoint>& data, Eigen::Vector<fvalue, Eigen::Dynamic>* omega = nullptr)

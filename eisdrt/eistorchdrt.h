@@ -17,7 +17,7 @@
  * along with libeisdrt.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <eisgenerator/eistype.h>
+#include <kisstype/type.h>
 
 #include "torchdrt.h"
 
