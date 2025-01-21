@@ -14,13 +14,14 @@ the main devolpment platform of _libeisdrt_ is linux, and _libeisdrt_ works best
 - a C++20 compliant compiler like [gcc](https://gcc.gnu.org/)
 - [cmake](https://cmake.org/) version 3.19 or later
 - [libtorch](https://pytorch.org/get-started/locally/) is optional, but is required for libtorch Tensor support
-- [eisgenerator](https://git-ce.rwth-aachen.de/carl_philipp.klemm/eisgenerator) is optional, but is required for eisgenerator DataPoint support
-- [PkgConfig](https://www.freedesktop.org/wiki/Software/pkg-config/) is optional, but is required for eisgenerator support
+- [PkgConfig](https://www.freedesktop.org/wiki/Software/pkg-config/) is optional, but is required for eistype support
+- [eistype](https://github.com/EIS-KISS/Eistype) is optional, but is required to work with KISS eistypes.
 - [eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) version 4.0 or later
+- [eisgenerator](https://github.com/EIS-KISS/eisgenerator) is optional and used for the tests only
 
 ### Procedure
 ```
-$ git clone https://git-ce.rwth-aachen.de/carl_philipp.klemm/libdrt
+$ git clone https://github.com/EIS-KISS/libdrt.git
 $ mkdir libdrt/build
 $ cd libdrt/build
 $ cmake ..
